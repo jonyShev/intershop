@@ -1,0 +1,27 @@
+package com.jonyshev.intershop.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "product")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+
+    @Column(length = 1000)
+    private String description;
+
+    private Integer price;
+
+    private String imageUrl;
+}
