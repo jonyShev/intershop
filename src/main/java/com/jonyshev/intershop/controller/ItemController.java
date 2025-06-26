@@ -1,0 +1,39 @@
+package com.jonyshev.intershop.controller;
+
+import com.jonyshev.intershop.model.Item;
+import com.jonyshev.intershop.model.PagingInfo;
+import com.jonyshev.intershop.service.ItemService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+
+import java.util.List;
+
+@Controller
+@RequiredArgsConstructor
+public class ItemController {
+
+    private final ItemService itemService;
+
+    @GetMapping("/")
+    public String redirectToMainItems() {
+        return "redirect:/main/items";
+    }
+
+    @GetMapping("main/items")
+    public String getAllItems(Model model) {
+        List<Item> items = itemService.getAllProducts();
+        model.addAttribute("items", items);
+
+        PagingInfo paging = new PagingInfo(1, 10, false, false);
+
+        model.addAttribute("paging", paging);
+
+        model.addAttribute("search", "");
+        model.addAttribute("sort", "NO");
+
+        return "main";
+    }
+
+}
