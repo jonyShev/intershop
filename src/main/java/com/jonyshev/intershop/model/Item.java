@@ -10,7 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class Product {
+public class Item {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +21,9 @@ public class Product {
     @Column(length = 1000)
     private String description;
 
-    private Integer price;
+    private String imgPath;
 
-    private String imageUrl;
+    private Integer count;
+
+    private Integer price;
 }
