@@ -17,4 +17,6 @@ public interface CartService {
     int getTotalPrice();
 
     boolean isEmpty();
+
+    int getItemCount(Long id);
 }

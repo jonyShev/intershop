@@ -64,4 +64,9 @@ public class CartServiceImpl implements CartService {
     public boolean isEmpty() {
         return cart.isEmpty();
     }
+
+    @Override
+    public int getItemCount(Long id) {
+        return cart.getOrDefault(id, 0);
+    }
 }

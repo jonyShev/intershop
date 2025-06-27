@@ -83,4 +83,14 @@ public class ItemController {
 
         return "redirect:/items/" + id;
     }
+
+    @GetMapping("/items/{id}")
+    public String getItemPage(@PathVariable Long id, Model model){
+        Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+        int count = cartService.getItemCount(id);
+        item.setCount(count);
+
+        model.addAttribute("item", item);
+        return "item";
+    }
 }
