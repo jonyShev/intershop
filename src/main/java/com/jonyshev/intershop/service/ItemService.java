@@ -7,11 +7,11 @@ import java.util.Optional;
 
 public interface ItemService {
 
-    List<Item> getAllProducts();
+    List<Item> getAllItems();
 
-    Optional<Item> getProductById(Long id);
+    Optional<Item> getItemById(Long id);
 
-    Item saveProduct(Item item);
+    Item saveItem(Item item);
 
-    void deleteProduct(Long id);
+    void deleteItem(Long id);
 }

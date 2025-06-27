@@ -13,7 +13,13 @@ import java.util.stream.Collectors;
 @SessionScope
 public class CartServiceImpl implements CartService {
 
+    private final ItemService itemService;
+
     private final Map<Long, Integer> cart = new HashMap<>();
+
+    public CartServiceImpl(ItemService itemService) {
+        this.itemService = itemService;
+    }
 
     @Override
     public void addItem(Long id) {
@@ -44,7 +50,14 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public int getTotalPrice() {
-        return 0;
+        return cart.entrySet().stream()
+                .mapToInt(entry -> {
+                    Long id = entry.getKey();
+                    Integer count = entry.getValue();
+                    Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+                    return item.getPrice() * count;
+                })
+                .sum();
     }
 
     @Override

@@ -15,22 +15,22 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
 
     @Override
-    public List<Item> getAllProducts() {
+    public List<Item> getAllItems() {
         return itemRepository.findAll();
     }
 
     @Override
-    public Optional<Item> getProductById(Long id) {
+    public Optional<Item> getItemById(Long id) {
         return itemRepository.findById(id);
     }
 
     @Override
-    public Item saveProduct(Item item) {
+    public Item saveItem(Item item) {
         return itemRepository.save(item);
     }
 
     @Override
-    public void deleteProduct(Long id) {
+    public void deleteItem(Long id) {
         itemRepository.deleteById(id);
     }
 }

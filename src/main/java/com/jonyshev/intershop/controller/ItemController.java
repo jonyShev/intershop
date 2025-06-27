@@ -30,7 +30,7 @@ public class ItemController {
 
     @GetMapping("main/items")
     public String getAllItems(Model model) {
-        List<Item> items = itemService.getAllProducts();
+        List<Item> items = itemService.getAllItems();
         model.addAttribute("items", items);
 
         PagingInfo paging = new PagingInfo(1, 10, false, false);
@@ -60,5 +60,16 @@ public class ItemController {
         model.addAttribute("empty", cartService.isEmpty());
 
         return "cart";
+    }
+
+    @PostMapping("/cart/items/{id}")
+    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action){
+        switch (action) {
+            case PLUS -> cartService.addItem(id);
+            case MINUS -> cartService.decreaseItem(id);
+            case DELETE -> cartService.deleteItem(id);
+        }
+
+        return "redirect:/cart/items";
     }
 }
