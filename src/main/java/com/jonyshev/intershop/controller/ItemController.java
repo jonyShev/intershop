@@ -52,4 +52,13 @@ public class ItemController {
         }
         return "redirect:/main/items";
     }
+
+    @GetMapping("/cart/items")
+    public String showCart(Model model){
+        model.addAttribute("items", cartService.getCartItems());
+        model.addAttribute("totalPrice", cartService.getTotalPrice());
+        model.addAttribute("empty", cartService.isEmpty());
+
+        return "cart";
+    }
 }

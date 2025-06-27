@@ -1,14 +1,17 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.model.Item;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @SessionScope
-public class CartServiceImpl implements CartService{
+public class CartServiceImpl implements CartService {
 
     private final Map<Long, Integer> cart = new HashMap<>();
 
@@ -25,5 +28,27 @@ public class CartServiceImpl implements CartService{
     @Override
     public void deleteItem(Long id) {
         cart.remove(id);
+    }
+
+    @Override
+    public List<Item> getCartItems() {
+        return cart.entrySet().stream()
+                .map(entry -> {
+                    Item item = new Item();
+                    item.setId(entry.getKey());
+                    item.setCount(entry.getValue());
+                    return item;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public int getTotalPrice() {
+        return 0;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return cart.isEmpty();
     }
 }
