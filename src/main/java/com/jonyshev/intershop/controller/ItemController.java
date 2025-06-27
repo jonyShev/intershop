@@ -72,4 +72,15 @@ public class ItemController {
 
         return "redirect:/cart/items";
     }
+
+    @PostMapping("/items/{id}")
+    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action){
+        switch (action) {
+            case PLUS -> cartService.addItem(id);
+            case MINUS -> cartService.decreaseItem(id);
+            case DELETE -> cartService.deleteItem(id);
+        }
+
+        return "redirect:/items/" + id;
+    }
 }
