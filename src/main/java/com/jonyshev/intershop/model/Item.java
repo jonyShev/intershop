@@ -25,7 +25,5 @@ public class Item {
 
     private String imgPath;
 
-    private int count;
-
     private BigDecimal price;
 }

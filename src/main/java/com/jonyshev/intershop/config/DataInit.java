@@ -21,7 +21,6 @@ public class DataInit {
                                 .title("Пицца")
                                 .description("Вкусная пицца с сыром")
                                 .imgPath("/images/pizza.png")
-                                .count(50)
                                 .price(new BigDecimal("12.99"))
                                 .build(),
 
@@ -29,7 +28,6 @@ public class DataInit {
                                 .title("Бургер")
                                 .description("Сочный бургер с говядиной")
                                 .imgPath("/images/burger.png")
-                                .count(30)
                                 .price(new BigDecimal("8.99"))
                                 .build(),
 
@@ -37,7 +35,6 @@ public class DataInit {
                                 .title("Суши")
                                 .description("Набор роллов")
                                 .imgPath("/images/sushi.png")
-                                .count(20)
                                 .price(new BigDecimal("15.99"))
                                 .build(),
 
@@ -45,7 +42,6 @@ public class DataInit {
                                 .title("Паста")
                                 .description("Паста карбонара")
                                 .imgPath("/images/pasta.png")
-                                .count(40)
                                 .price(new BigDecimal("10.99"))
                                 .build(),
 
@@ -53,7 +49,6 @@ public class DataInit {
                                 .title("Стейк")
                                 .description("Говяжий стейк")
                                 .imgPath("/images/steak.png")
-                                .count(25)
                                 .price(new BigDecimal("18.50"))
                                 .build(),
 
@@ -61,7 +56,6 @@ public class DataInit {
                                 .title("Салат")
                                 .description("Овощной салат")
                                 .imgPath("/images/salad.png")
-                                .count(60)
                                 .price(new BigDecimal("6.75"))
                                 .build()
                 ));
