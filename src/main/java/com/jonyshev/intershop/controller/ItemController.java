@@ -1,11 +1,18 @@
 package com.jonyshev.intershop.controller;
 
+import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.mapper.ItemMapper;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
 import com.jonyshev.intershop.model.PagingInfo;
 import com.jonyshev.intershop.service.CartService;
 import com.jonyshev.intershop.service.ItemService;
+import com.jonyshev.intershop.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -22,6 +30,8 @@ public class ItemController {
     private final ItemService itemService;
 
     private final CartService cartService;
+    private final OrderService orderService;
+    private final ItemMapper itemMapper;
 
     @GetMapping("/")
     public String redirectToMainItems() {
@@ -29,18 +39,39 @@ public class ItemController {
     }
 
     @GetMapping("main/items")
-    public String getAllItems(Model model) {
-        List<Item> items = itemService.getAllItems();
+    public String getAllItems(@RequestParam(defaultValue = "") String search,
+                              @RequestParam(defaultValue = "NO") String sort,
+                              @RequestParam(defaultValue = "10") int pageSize,
+                              @RequestParam(defaultValue = "1") int pageNumber,
+                              Model model) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize, getSort(sort));
+        Page<Item> page = itemService.findItems(search, sort, pageable);
+
+        List<ItemDto> itemDtos = itemService.mapToDto(page.getContent(), cartService);
+        List<List<ItemDto>> items = chunkItems(itemDtos, 3);
+
         model.addAttribute("items", items);
-
-        PagingInfo paging = new PagingInfo(1, 10, false, false);
-
-        model.addAttribute("paging", paging);
-
-        model.addAttribute("search", "");
-        model.addAttribute("sort", "NO");
+        model.addAttribute("paging", new PagingInfo(pageNumber, pageSize, page.hasNext(), page.hasPrevious()));
+        model.addAttribute("search", search);
+        model.addAttribute("sort", sort);
 
         return "main";
+    }
+
+    private List<List<ItemDto>> chunkItems(List<ItemDto> items, int rowSize) {
+        List<List<ItemDto>> result = new ArrayList<>();
+        for (int i = 0; i < items.size(); i += rowSize) {
+            result.add(items.subList(i, Math.min(i + rowSize, items.size())));
+        }
+        return result;
+    }
+
+    private Sort getSort(String sort) {
+        return switch (sort) {
+            case "ALPHA" -> Sort.by("title");
+            case "PRICE" -> Sort.by("price");
+            default -> Sort.unsorted();
+        };
     }
 
     @PostMapping("/main/items/{id}")
@@ -53,17 +84,17 @@ public class ItemController {
         return "redirect:/main/items";
     }
 
-    @GetMapping("/cart/items")
-    public String showCart(Model model){
-        model.addAttribute("items", cartService.getCartItems());
-        model.addAttribute("totalPrice", cartService.getTotalPrice());
-        model.addAttribute("empty", cartService.isEmpty());
-
-        return "cart";
-    }
+//    @GetMapping("/cart/items")
+//    public String showCart(Model model){
+//        model.addAttribute("items", cartService.getCartItems());
+//        model.addAttribute("totalPrice", cartService.getTotalPrice());
+//        model.addAttribute("empty", cartService.isEmpty());
+//
+//        return "cart";
+//    }
 
     @PostMapping("/cart/items/{id}")
-    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action){
+    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action) {
         switch (action) {
             case PLUS -> cartService.addItem(id);
             case MINUS -> cartService.decreaseItem(id);
@@ -74,7 +105,7 @@ public class ItemController {
     }
 
     @PostMapping("/items/{id}")
-    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action){
+    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action) {
         switch (action) {
             case PLUS -> cartService.addItem(id);
             case MINUS -> cartService.decreaseItem(id);
@@ -85,12 +116,18 @@ public class ItemController {
     }
 
     @GetMapping("/items/{id}")
-    public String getItemPage(@PathVariable Long id, Model model){
+    public String getItemPage(@PathVariable Long id, Model model) {
         Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-        int count = cartService.getItemCount(id);
+        int count = cartService.getCountForItem(id);
         item.setCount(count);
 
         model.addAttribute("item", item);
         return "item";
+    }
+
+    @GetMapping("/orders")
+    public String getOrders(Model model) {
+        model.addAttribute("orders", orderService.getAllOrders());
+        return "orders";
     }
 }
