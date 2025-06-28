@@ -28,10 +28,8 @@ import java.util.List;
 public class ItemController {
 
     private final ItemService itemService;
-
     private final CartService cartService;
     private final OrderService orderService;
-    private final ItemMapper itemMapper;
 
     @GetMapping("/")
     public String redirectToMainItems() {
@@ -58,6 +56,55 @@ public class ItemController {
         return "main";
     }
 
+
+    @PostMapping("/main/items/{id}")
+    public String updateCartFromMain(@PathVariable Long id, @RequestParam CartAction action) {
+        updateCartAction(id, action);
+        return "redirect:/main/items";
+    }
+
+    @GetMapping("/cart/items")
+    public String showCart(Model model) {
+        model.addAttribute("items", cartService.getCartItems());
+        model.addAttribute("total", cartService.getTotalPrice());
+        model.addAttribute("empty", cartService.isEmpty());
+        return "cart";
+    }
+
+    @PostMapping("/cart/items/{id}")
+    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action) {
+        updateCartAction(id, action);
+        return "redirect:/cart/items";
+    }
+
+    @PostMapping("/items/{id}")
+    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action) {
+        updateCartAction(id, action);
+        return "redirect:/items/" + id;
+    }
+
+    @GetMapping("/items/{id}")
+    public String getItemPage(@PathVariable Long id, Model model) {
+        Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+        ItemDto itemDto = itemService.mapToDto(item, cartService);
+        model.addAttribute("item", itemDto);
+        return "item";
+    }
+
+    @GetMapping("/orders")
+    public String getOrders(Model model) {
+        model.addAttribute("orders", orderService.getAllOrders());
+        return "orders";
+    }
+
+    private void updateCartAction(Long id, CartAction action) {
+        switch (action) {
+            case PLUS -> cartService.addItem(id);
+            case MINUS -> cartService.decreaseItem(id);
+            case DELETE -> cartService.deleteItem(id);
+        }
+    }
+
     private List<List<ItemDto>> chunkItems(List<ItemDto> items, int rowSize) {
         List<List<ItemDto>> result = new ArrayList<>();
         for (int i = 0; i < items.size(); i += rowSize) {
@@ -72,62 +119,5 @@ public class ItemController {
             case "PRICE" -> Sort.by("price");
             default -> Sort.unsorted();
         };
-    }
-
-    @PostMapping("/main/items/{id}")
-    public String updateCartFromMain(@PathVariable Long id, @RequestParam CartAction action) {
-        switch (action) {
-            case PLUS -> cartService.addItem(id);
-            case MINUS -> cartService.decreaseItem(id);
-            case DELETE -> cartService.deleteItem(id);
-        }
-        return "redirect:/main/items";
-    }
-
-//    @GetMapping("/cart/items")
-//    public String showCart(Model model){
-//        model.addAttribute("items", cartService.getCartItems());
-//        model.addAttribute("totalPrice", cartService.getTotalPrice());
-//        model.addAttribute("empty", cartService.isEmpty());
-//
-//        return "cart";
-//    }
-
-    @PostMapping("/cart/items/{id}")
-    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action) {
-        switch (action) {
-            case PLUS -> cartService.addItem(id);
-            case MINUS -> cartService.decreaseItem(id);
-            case DELETE -> cartService.deleteItem(id);
-        }
-
-        return "redirect:/cart/items";
-    }
-
-    @PostMapping("/items/{id}")
-    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action) {
-        switch (action) {
-            case PLUS -> cartService.addItem(id);
-            case MINUS -> cartService.decreaseItem(id);
-            case DELETE -> cartService.deleteItem(id);
-        }
-
-        return "redirect:/items/" + id;
-    }
-
-    @GetMapping("/items/{id}")
-    public String getItemPage(@PathVariable Long id, Model model) {
-        Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-        int count = cartService.getCountForItem(id);
-        item.setCount(count);
-
-        model.addAttribute("item", item);
-        return "item";
-    }
-
-    @GetMapping("/orders")
-    public String getOrders(Model model) {
-        model.addAttribute("orders", orderService.getAllOrders());
-        return "orders";
     }
 }
