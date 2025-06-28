@@ -3,8 +3,10 @@ package com.jonyshev.intershop.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
-@Table(name = "item")
+@Table(name = "items")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -23,7 +25,7 @@ public class Item {
 
     private String imgPath;
 
-    private Integer count;
+    private int count;
 
-    private Integer price;
+    private BigDecimal price;
 }
