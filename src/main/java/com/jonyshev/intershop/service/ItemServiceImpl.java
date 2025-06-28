@@ -55,4 +55,9 @@ public class ItemServiceImpl implements ItemService {
                 .map(item -> itemMapper.toDto(item, cartService))
                 .toList();
     }
+
+    @Override
+    public ItemDto mapToDto(Item item, CartService cartService) {
+        return itemMapper.toDto(item, cartService);
+    }
 }

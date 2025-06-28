@@ -21,4 +21,6 @@ public interface ItemService {
     Page<Item> findItems(String search, String sort, Pageable pageable);
 
     List<ItemDto> mapToDto(List<Item> items, CartService cartService);
+
+    ItemDto mapToDto(Item item, CartService cartService);
 }
