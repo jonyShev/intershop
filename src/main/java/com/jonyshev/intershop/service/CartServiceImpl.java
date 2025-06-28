@@ -66,7 +66,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public int getItemCount(Long id) {
+    public int getCountForItem(Long id) {
         return cart.getOrDefault(id, 0);
     }
 }
