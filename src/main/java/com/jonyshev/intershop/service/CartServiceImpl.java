@@ -1,9 +1,11 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.Item;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,27 +39,30 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<Item> getCartItems() {
+    public List<ItemDto> getCartItems() {
         return cart.entrySet().stream()
                 .map(entry -> {
-                    Item item = new Item();
-                    item.setId(entry.getKey());
-                    item.setCount(entry.getValue());
-                    return item;
+                    Long id = entry.getKey();
+                    int count = entry.getValue();
+                    Item item = itemService.getItemById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+                    return itemService.mapToDto(item, this);
                 })
                 .collect(Collectors.toList());
     }
 
     @Override
-    public int getTotalPrice() {
+    public BigDecimal getTotalPrice() {
         return cart.entrySet().stream()
-                .mapToInt(entry -> {
+                .map(entry -> {
                     Long id = entry.getKey();
                     Integer count = entry.getValue();
-                    Item item = itemService.getItemById(id).orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-                    return item.getPrice() * count;
+                    Item item = itemService.getItemById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+
+                    return item.getPrice().multiply(BigDecimal.valueOf(count));
                 })
-                .sum();
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override

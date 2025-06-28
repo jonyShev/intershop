@@ -1,7 +1,8 @@
 package com.jonyshev.intershop.service;
 
-import com.jonyshev.intershop.model.Item;
+import com.jonyshev.intershop.dto.ItemDto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CartService {
@@ -12,9 +13,9 @@ public interface CartService {
 
     void deleteItem(Long id);
 
-    List<Item> getCartItems();
+    List<ItemDto> getCartItems();
 
-    int getTotalPrice();
+    BigDecimal getTotalPrice();
 
     boolean isEmpty();
 
