@@ -1,6 +1,7 @@
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.SessionScope;
@@ -91,5 +92,14 @@ public class CartServiceImpl implements CartService {
     @Override
     public void clear() {
         cart.clear();
+    }
+
+    @Override
+    public void updateCartAction(Long id, CartAction action) {
+        switch (action) {
+            case PLUS -> this.addItem(id);
+            case MINUS -> this.decreaseItem(id);
+            case DELETE -> this.deleteItem(id);
+        }
     }
 }

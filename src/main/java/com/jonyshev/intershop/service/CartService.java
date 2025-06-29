@@ -1,6 +1,7 @@
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
 
 import java.math.BigDecimal;
@@ -25,4 +26,6 @@ public interface CartService {
     int getCountForItem(Long id);
 
     void clear();
+
+    void updateCartAction(Long id, CartAction action);
 }
