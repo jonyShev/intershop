@@ -39,14 +39,27 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<ItemDto> getCartItems() {
+    public List<ItemDto> getCartItemsDto() {
         return cart.entrySet().stream()
                 .map(entry -> {
                     Long id = entry.getKey();
-                    int count = entry.getValue();
                     Item item = itemService.getItemById(id)
                             .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
                     return itemService.mapToDto(item, this);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Item> getCartItems() {
+        return cart.entrySet().stream()
+                .map(entry -> {
+                    Long id = entry.getKey();
+                    Integer count = entry.getValue();
+                    Item item = itemService.getItemById(id)
+                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
+                    item.setCount(count);
+                    return item;
                 })
                 .collect(Collectors.toList());
     }
@@ -73,5 +86,10 @@ public class CartServiceImpl implements CartService {
     @Override
     public int getCountForItem(Long id) {
         return cart.getOrDefault(id, 0);
+    }
+
+    @Override
+    public void clear() {
+        cart.clear();
     }
 }
