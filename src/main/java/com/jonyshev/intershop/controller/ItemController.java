@@ -1,9 +1,9 @@
 package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.dto.ItemDto;
-import com.jonyshev.intershop.mapper.ItemMapper;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
+import com.jonyshev.intershop.model.Order;
 import com.jonyshev.intershop.model.PagingInfo;
 import com.jonyshev.intershop.service.CartService;
 import com.jonyshev.intershop.service.ItemService;
@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class ItemController {
 
     @GetMapping("/cart/items")
     public String showCart(Model model) {
-        model.addAttribute("items", cartService.getCartItems());
+        model.addAttribute("items", cartService.getCartItemsDto());
         model.addAttribute("total", cartService.getTotalPrice());
         model.addAttribute("empty", cartService.isEmpty());
         return "cart";
@@ -91,8 +92,28 @@ public class ItemController {
         return "item";
     }
 
+    @PostMapping("/buy")
+    public String buy() {
+        List<Item> items = cartService.getCartItems();
+        BigDecimal totalSum = cartService.getTotalPrice();
+        Order order = orderService.createOrder(items, totalSum);
+        cartService.clear();
+        return "redirect:/orders/" + order.getId() + "?newOrder=true";
+    }
+
+    @GetMapping("/orders/{id}")
+    public String showOrder(@PathVariable Long id,
+                            @RequestParam(defaultValue = "false") boolean newOrder,
+                            Model model) {
+        Order order = orderService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found " + id));
+        model.addAttribute("order", order);
+        model.addAttribute("newOrder", newOrder);
+        return "order";
+    }
+
     @GetMapping("/orders")
-    public String getOrders(Model model) {
+    public String showOrders(Model model) {
         model.addAttribute("orders", orderService.getAllOrders());
         return "orders";
     }
