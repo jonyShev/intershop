@@ -1,12 +1,13 @@
 package com.jonyshev.intershop.model;
 
-import jakarta.persistence.*;
+
 import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
-@Entity
-@Table(name = "items")
+@Table("items")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -15,12 +16,10 @@ import java.math.BigDecimal;
 public class Item {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
 
-    @Column(length = 1000)
     private String description;
 
     private String imgPath;
