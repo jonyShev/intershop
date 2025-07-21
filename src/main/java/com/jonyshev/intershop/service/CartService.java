@@ -1,18 +1,13 @@
-/*
 package com.jonyshev.intershop.service;
 
-import com.jonyshev.intershop.dto.ItemDto;
-import com.jonyshev.intershop.model.CartAction;
-import com.jonyshev.intershop.model.Item;
-
-import java.math.BigDecimal;
-import java.util.List;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
 
 public interface CartService {
 
-void addItem(Long id);
+    /*void addItem(Long id);*/
 
-    void decreaseItem(Long id);
+    /*void decreaseItem(Long id);
 
     void deleteItem(Long id);
 
@@ -22,14 +17,12 @@ void addItem(Long id);
 
     BigDecimal getTotalPrice();
 
-    boolean isEmpty();
+    boolean isEmpty();*/
 
+    Mono<Integer> getCountForItem(Long id, WebSession session);
 
-    int getCountForItem(Long id);
+   /* void clear();
 
-void clear();
-
-    void updateCartAction(Long id, CartAction action);
+    void updateCartAction(Long id, CartAction action);*/
 
 }
-*/

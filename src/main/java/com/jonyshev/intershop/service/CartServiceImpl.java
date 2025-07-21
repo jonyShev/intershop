@@ -1,22 +1,33 @@
-/*
 package com.jonyshev.intershop.service;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
-@SessionScope
 public class CartServiceImpl implements CartService {
 
-private final ItemService itemService;
+    private final static String CART_KEY = "CART";
+
+    @Override
+    public Mono<Integer> getCountForItem(Long id, WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        int count = cart.getOrDefault(id, 0);
+        return Mono.just(count);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<Long, Integer> getCart(WebSession session) {
+        return (Map<Long, Integer>) session.getAttributes().computeIfAbsent(CART_KEY, key -> new HashMap<Long, Integer>());
+    }
 
 
-    private final Map<Long, Integer> cart = new HashMap<>();
+   /* private final Map<Long, Integer> cart = new HashMap<>();
 
-public CartServiceImpl(ItemService itemService) {
+    public CartServiceImpl(ItemService itemService) {
         this.itemService = itemService;
     }
 
@@ -86,8 +97,9 @@ public CartServiceImpl(ItemService itemService) {
         return cart.getOrDefault(id, 0);
     }
 
-@Override
-    public void clear() {ў
+    @Override
+    public void clear() {
+        ў
         cart.clear();
     }
 
@@ -98,7 +110,6 @@ public CartServiceImpl(ItemService itemService) {
             case MINUS -> this.decreaseItem(id);
             case DELETE -> this.deleteItem(id);
         }
-    }
+    }*/
 
 }
-*/

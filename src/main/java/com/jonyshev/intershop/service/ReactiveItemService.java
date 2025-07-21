@@ -2,7 +2,9 @@ package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.Item;
+import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -12,5 +14,5 @@ public interface ReactiveItemService {
 
     List<List<ItemDto>> chunkItems(List<ItemDto> itemDtos, int i);
 
-    ItemDto mapToDto(Item item);
+    Mono<ItemDto> mapToDto(Item item, WebSession session);
 }
