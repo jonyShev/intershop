@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.model.Item;
@@ -14,3 +15,4 @@ public interface OrderService {
 
     Order createOrder(List<Item> items, BigDecimal totalSum);
 }
+*/

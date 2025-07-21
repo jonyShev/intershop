@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.mapper.ItemMapper;
@@ -131,4 +132,4 @@ public class ItemServiceImplTest {
         assertThat(pageable.getSort()).isEqualTo(Sort.by("price"));
     }
 
-}
+}*/

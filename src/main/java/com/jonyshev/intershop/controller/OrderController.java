@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.model.Order;
@@ -32,3 +33,4 @@ public class OrderController {
         return "orders";
     }
 }
+*/

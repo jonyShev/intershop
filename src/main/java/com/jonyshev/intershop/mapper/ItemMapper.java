@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.mapper;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -11,3 +12,4 @@ public interface ItemMapper {
     @Mapping(target = "count", expression = "java(cartService.getCountForItem(item.getId()))")
     ItemDto toDto(Item item, CartService cartService);
 }
+*/

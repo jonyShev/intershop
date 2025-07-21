@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.model.CartAction;
@@ -45,4 +46,4 @@ public class CartController {
         cartService.clear();
         return "redirect:/orders/" + order.getId() + "?newOrder=true";
     }
-}
+}*/

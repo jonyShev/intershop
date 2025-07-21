@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -69,4 +70,4 @@ public class ItemController {
         cartService.updateCartAction(id, action);
         return "redirect:/items/" + id;
     }
-}
+}*/

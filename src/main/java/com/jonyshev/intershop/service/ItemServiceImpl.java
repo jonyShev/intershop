@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -73,4 +74,4 @@ public class ItemServiceImpl implements ItemService {
         Sort resultSort = getSort(sort);
         return PageRequest.of(pageNumber - 1, pageSize, resultSort);
     }
-}
+}*/

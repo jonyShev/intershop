@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.model.Item;
@@ -45,3 +46,4 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.save(order);
     }
 }
+*/

@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.repository;
 
 import com.jonyshev.intershop.model.Item;
@@ -9,4 +10,4 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     Page<Item> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
             String title, String description, Pageable pageable);
-}
+}*/

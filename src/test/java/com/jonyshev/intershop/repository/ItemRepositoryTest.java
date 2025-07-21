@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.repository;
 
 import com.jonyshev.intershop.model.Item;
@@ -41,4 +42,4 @@ public class ItemRepositoryTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getTitle()).isEqualTo("Burger");
     }
-}
+}*/

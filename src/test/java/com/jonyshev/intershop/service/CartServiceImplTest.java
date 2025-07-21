@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -145,3 +146,4 @@ public class CartServiceImplTest {
         verify(itemService, times(1)).getItemById(1L);
     }
 }
+*/

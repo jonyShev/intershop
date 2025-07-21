@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -25,3 +26,4 @@ public interface ItemService {
 
     Pageable buildPageable(int pageNumber, int pageSize, String sort);
 }
+*/

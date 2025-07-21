@@ -1,3 +1,4 @@
+/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
@@ -9,7 +10,7 @@ import java.util.List;
 
 public interface CartService {
 
-    void addItem(Long id);
+void addItem(Long id);
 
     void decreaseItem(Long id);
 
@@ -23,9 +24,12 @@ public interface CartService {
 
     boolean isEmpty();
 
+
     int getCountForItem(Long id);
 
-    void clear();
+void clear();
 
     void updateCartAction(Long id, CartAction action);
+
 }
+*/
