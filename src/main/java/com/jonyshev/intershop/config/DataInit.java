@@ -1,8 +1,8 @@
 package com.jonyshev.intershop.config;
 
 import com.jonyshev.intershop.model.Item;
-import com.jonyshev.intershop.repository.ItemRepository;
-import org.springframework.boot.CommandLineRunner;
+import com.jonyshev.intershop.repository.ReactiveItemRepository;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,10 +13,10 @@ import java.util.List;
 public class DataInit {
 
     @Bean
-    CommandLineRunner initItems(ItemRepository itemRepository) {
-        return args -> {
-            if (itemRepository.count() == 0) {
-                itemRepository.saveAll(List.of(
+    public ApplicationRunner initItems(ReactiveItemRepository itemRepository) {
+        return args -> itemRepository.count()
+                .filter(count -> count == 0)
+                .flatMapMany(rep -> itemRepository.saveAll(List.of(
                         Item.builder().title("Пицца").description("Вкусная пицца с сыром").imgPath("/images/pizza.png").price(BigDecimal.valueOf(550)).build(),
                         Item.builder().title("Бургер").description("Сочный бургер с говядиной").imgPath("/images/burger.png").price(BigDecimal.valueOf(350)).build(),
                         Item.builder().title("Суши").description("Набор роллов").imgPath("/images/sushi.png").price(BigDecimal.valueOf(750)).build(),
@@ -32,8 +32,8 @@ public class DataInit {
                         Item.builder().title("Куриные крылышки").description("Острые куриные крылышки").imgPath("/images/wings.png").price(BigDecimal.valueOf(450)).build(),
                         Item.builder().title("Чизкейк").description("Классический ванильный чизкейк").imgPath("/images/cheesecake.png").price(BigDecimal.valueOf(300)).build(),
                         Item.builder().title("Мороженое").description("Пломбир с шоколадным топпингом").imgPath("/images/icecream.png").price(BigDecimal.valueOf(180)).build()
-                ));
-            }
-        };
+                )))
+                .then()
+                .subscribe();
     }
 }
