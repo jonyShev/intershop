@@ -1,17 +1,18 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.model.CartAction;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 public interface CartService {
 
-    /*void addItem(Long id);*/
+    void addItem(Long id, WebSession session);
 
-    /*void decreaseItem(Long id);
+    void decreaseItem(Long id, WebSession session);
 
-    void deleteItem(Long id);
+    void deleteItem(Long id, WebSession session);
 
-    List<ItemDto> getCartItemsDto();
+    /*List<ItemDto> getCartItemsDto();
 
     List<Item> getCartItems();
 
@@ -21,8 +22,8 @@ public interface CartService {
 
     Mono<Integer> getCountForItem(Long id, WebSession session);
 
-   /* void clear();
+    /*void clear();*/
 
-    void updateCartAction(Long id, CartAction action);*/
+    Mono<Void> updateCartAction(Long id, CartAction action, WebSession session);
 
 }

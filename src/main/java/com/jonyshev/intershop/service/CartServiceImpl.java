@@ -1,5 +1,6 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.model.CartAction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
@@ -13,10 +14,39 @@ public class CartServiceImpl implements CartService {
     private final static String CART_KEY = "CART";
 
     @Override
+    public void addItem(Long id, WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        cart.put(id, cart.getOrDefault(id, 0) + 1);
+    }
+
+    @Override
+    public void decreaseItem(Long id, WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        cart.computeIfPresent(id, (itemId, count) -> (count > 1) ? count - 1 : null);
+    }
+
+    @Override
+    public void deleteItem(Long id, WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        cart.remove(id);
+    }
+
+    @Override
     public Mono<Integer> getCountForItem(Long id, WebSession session) {
         Map<Long, Integer> cart = getCart(session);
         int count = cart.getOrDefault(id, 0);
         return Mono.just(count);
+    }
+
+    @Override
+    public Mono<Void> updateCartAction(Long id, CartAction action, WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        switch (action) {
+            case PLUS -> addItem(id, session);
+            case MINUS -> decreaseItem(id, session);
+            case DELETE -> deleteItem(id, session);
+        }
+        return Mono.empty();
     }
 
     @SuppressWarnings("unchecked")
@@ -29,21 +59,6 @@ public class CartServiceImpl implements CartService {
 
     public CartServiceImpl(ItemService itemService) {
         this.itemService = itemService;
-    }
-
-    @Override
-    public void addItem(Long id) {
-        cart.put(id, cart.getOrDefault(id, 0) + 1);
-    }
-
-    @Override
-    public void decreaseItem(Long id) {
-        cart.computeIfPresent(id, (itemId, count) -> (count > 1) ? count - 1 : null);
-    }
-
-    @Override
-    public void deleteItem(Long id) {
-        cart.remove(id);
     }
 
     @Override

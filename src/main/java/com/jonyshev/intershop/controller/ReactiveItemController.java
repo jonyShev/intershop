@@ -1,12 +1,14 @@
 package com.jonyshev.intershop.controller;
 
+import com.jonyshev.intershop.model.CartAction;
+import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.model.PagingInfo;
+import com.jonyshev.intershop.service.CartService;
 import com.jonyshev.intershop.service.ReactiveItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +19,7 @@ import java.util.List;
 public class ReactiveItemController {
 
     private final ReactiveItemService reactiveItemService;
+    private final CartService cartService;
 
     @GetMapping("/")
     public String redirectToMainItems() {
@@ -45,5 +48,14 @@ public class ReactiveItemController {
                     ));
                 })
                 .thenReturn("main");
+    }
+
+    @PostMapping("/main/items/{id}")
+    public Mono<String> updateCartFromMain(@PathVariable Long id,
+                                           @ModelAttribute CartActionForm form,
+                                           WebSession session) {
+        CartAction action = CartAction.valueOf(form.getAction().toUpperCase());
+        return cartService.updateCartAction(id, action, session)
+                .thenReturn("redirect:/main/items");
     }
 }
