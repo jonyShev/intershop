@@ -40,7 +40,6 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Mono<Void> updateCartAction(Long id, CartAction action, WebSession session) {
-        Map<Long, Integer> cart = getCart(session);
         switch (action) {
             case PLUS -> addItem(id, session);
             case MINUS -> decreaseItem(id, session);

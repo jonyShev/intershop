@@ -46,4 +46,19 @@ public class ReactiveItemServiceImpl implements ReactiveItemService {
                         .count(count)
                         .build());
     }
+
+    @Override
+    public Mono<ItemDto> getItemDtoById(Long id, WebSession session) {
+        return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Item not found" + id)))
+                .flatMap(item -> mapToDto(item, session));
+    }
+
+    @Override
+    public Mono<List<List<ItemDto>>> getItemChunks(String search, String sort, int pageSize, int pageNumber, WebSession session) {
+        return getAllItems(search, sort, pageSize, pageNumber)
+                .flatMap(item -> mapToDto(item, session))
+                .collectList()
+                .map(itemDtos -> chunkItems(itemDtos, 3));
+    }
 }

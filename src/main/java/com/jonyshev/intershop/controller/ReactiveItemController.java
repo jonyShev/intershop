@@ -26,17 +26,14 @@ public class ReactiveItemController {
         return "redirect:/main/items";
     }
 
-    @GetMapping("main/items")
+    @GetMapping("/main/items")
     public Mono<String> getAllItems(@RequestParam(defaultValue = "") String search,
                                     @RequestParam(defaultValue = "NO") String sort,
                                     @RequestParam(defaultValue = "10") int pageSize,
                                     @RequestParam(defaultValue = "1") int pageNumber,
                                     WebSession session,
                                     Model model) {
-        return reactiveItemService.getAllItems(search, sort, pageSize, pageNumber)
-                .flatMap(item -> reactiveItemService.mapToDto(item, session))
-                .collectList()
-                .map(itemDtos -> reactiveItemService.chunkItems(itemDtos, 3))
+        return reactiveItemService.getItemChunks(search, sort, pageSize, pageNumber, session)
                 .doOnNext(chunks -> {
                     model.addAttribute("items", chunks);
                     model.addAttribute("search", search);
@@ -58,4 +55,12 @@ public class ReactiveItemController {
         return cartService.updateCartAction(id, action, session)
                 .thenReturn("redirect:/main/items");
     }
+
+    @GetMapping("/items/{id}")
+    public Mono<String> getItemPage(@PathVariable Long id, WebSession session, Model model) {
+        return reactiveItemService.getItemDtoById(id, session)
+                .doOnNext(itemDto -> model.addAttribute("item", itemDto))
+                .thenReturn("item");
+    }
+
 }
