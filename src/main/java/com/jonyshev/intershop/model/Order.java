@@ -1,26 +1,24 @@
 package com.jonyshev.intershop.model;
 
-import jakarta.persistence.*;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-@Entity
 @Table(name = "orders")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<OrderItem> items;
 
     private BigDecimal totalSum;
 }
