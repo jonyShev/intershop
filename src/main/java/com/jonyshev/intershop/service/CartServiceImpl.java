@@ -1,17 +1,24 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
+import com.jonyshev.intershop.repository.ReactiveItemRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
 
     private final static String CART_KEY = "CART";
+    private final ReactiveItemRepository itemRepository;
 
     @Override
     public void addItem(Long id, WebSession session) {
@@ -32,6 +39,28 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    public Mono<BigDecimal> getTotalPrice(WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+
+        return Flux.fromIterable(cart.entrySet())
+                .flatMap(entry -> {
+                    Long id = entry.getKey();
+                    Integer count = entry.getValue();
+
+                    return itemRepository.findById(id)
+                            .map(item -> item.getPrice().multiply(BigDecimal.valueOf(count)))
+                            .switchIfEmpty(Mono.just(BigDecimal.ZERO));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    @Override
+    public boolean isEmpty(WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        return cart.isEmpty();
+    }
+
+    @Override
     public Mono<Integer> getCountForItem(Long id, WebSession session) {
         Map<Long, Integer> cart = getCart(session);
         int count = cart.getOrDefault(id, 0);
@@ -46,6 +75,25 @@ public class CartServiceImpl implements CartService {
             case DELETE -> deleteItem(id, session);
         }
         return Mono.empty();
+    }
+
+    @Override
+    public Flux<ItemDto> getCartItemsDto(WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        return Flux.fromIterable(cart.entrySet())
+                .flatMap(entry -> {
+                    Long id = entry.getKey();
+                    int count = entry.getValue();
+                    return itemRepository.findById(id)
+                            .map(item -> ItemDto.builder()
+                                    .id(item.getId())
+                                    .title(item.getTitle())
+                                    .description(item.getDescription())
+                                    .imgPath(item.getImgPath())
+                                    .price(item.getPrice())
+                                    .count(count)
+                                    .build());
+                });
     }
 
     @SuppressWarnings("unchecked")

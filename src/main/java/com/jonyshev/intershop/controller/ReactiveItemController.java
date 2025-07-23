@@ -63,4 +63,19 @@ public class ReactiveItemController {
                 .thenReturn("item");
     }
 
+   /* c
+    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action) {
+        cartService.updateCartAction(id, action);
+        return "redirect:/items/" + id;
+    }*/
+
+    @PostMapping("/items/{id}")
+    public Mono<String> updateCartFromItemPage(@PathVariable Long id,
+                                               @ModelAttribute CartActionForm form,
+                                               WebSession session) {
+        CartAction action = CartAction.valueOf(form.getAction().toUpperCase());
+        return cartService.updateCartAction(id, action, session)
+                .thenReturn("redirect:/items/" + id);
+    }
+
 }

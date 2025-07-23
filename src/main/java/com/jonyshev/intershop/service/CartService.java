@@ -1,8 +1,12 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
 import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.math.BigDecimal;
 
 public interface CartService {
 
@@ -14,16 +18,18 @@ public interface CartService {
 
     /*List<ItemDto> getCartItemsDto();
 
-    List<Item> getCartItems();
+    List<Item> getCartItems();*/
 
-    BigDecimal getTotalPrice();
+    Mono<BigDecimal> getTotalPrice(WebSession session);
 
-    boolean isEmpty();*/
+    boolean isEmpty(WebSession session);
 
     Mono<Integer> getCountForItem(Long id, WebSession session);
 
     /*void clear();*/
 
     Mono<Void> updateCartAction(Long id, CartAction action, WebSession session);
+
+    Flux<ItemDto> getCartItemsDto(WebSession session);
 
 }
