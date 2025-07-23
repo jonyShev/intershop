@@ -1,11 +1,16 @@
 package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.model.CartAction;
+import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
@@ -37,13 +42,16 @@ public class ReactiveCartController {
                 .thenReturn("cart");
     }
 
-    /*@PostMapping("/cart/items/{id}")
-    public String updateCartFromCart(@PathVariable Long id, @RequestParam CartAction action) {
-        cartService.updateCartAction(id, action);
-        return "redirect:/cart/items";
+    @PostMapping("/cart/items/{id}")
+    public Mono<String> updateCartFromCart(@PathVariable Long id,
+                                           @ModelAttribute CartActionForm form,
+                                           WebSession session) {
+        CartAction action = CartAction.valueOf(form.getAction().toUpperCase());
+        return cartService.updateCartAction(id, action, session)
+                .then(Mono.just("redirect:/cart/items"));
     }
 
-    @PostMapping("/buy")
+   /* @PostMapping("/buy")
     public String buy() {
         List<Item> items = cartService.getCartItems();
         BigDecimal totalSum = cartService.getTotalPrice();
