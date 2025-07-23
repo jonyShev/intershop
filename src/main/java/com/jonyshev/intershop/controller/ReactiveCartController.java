@@ -4,6 +4,7 @@ import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.service.CartService;
+import com.jonyshev.intershop.service.ReactiveOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,10 +23,11 @@ import java.util.List;
 public class ReactiveCartController {
 
     private final CartService cartService;
+    private final ReactiveOrderService reactiveOrderService;
 
     @GetMapping("/cart/items")
     public Mono<String> getCartItems(WebSession session, Model model) {
-        Mono<List<ItemDto>> listMono = cartService.getCartItemsDto(session).collectList();
+        Mono<List<ItemDto>> listMono = cartService.getCartItemsDto(session);
         Mono<BigDecimal> totalMono = cartService.getTotalPrice(session);
         boolean empty = cartService.isEmpty(session);
 
@@ -51,12 +53,14 @@ public class ReactiveCartController {
                 .then(Mono.just("redirect:/cart/items"));
     }
 
-   /* @PostMapping("/buy")
-    public String buy() {
-        List<Item> items = cartService.getCartItems();
-        BigDecimal totalSum = cartService.getTotalPrice();
-        Order order = orderService.createOrder(items, totalSum);
-        cartService.clear();
-        return "redirect:/orders/" + order.getId() + "?newOrder=true";
-    }*/
+    @PostMapping("/buy")
+    public Mono<String> buy(WebSession session) {
+        return reactiveOrderService.getItemsAndTotal(session)
+                .flatMap(tuple -> {
+                    List<ItemDto> itemDtos = tuple.getT1();
+                    BigDecimal total = tuple.getT2();
+                    return reactiveOrderService.createOrder(itemDtos, total, session);
+                })
+                .map(order -> "redirect:/orders/" + order.getId() + "?newOrder=true");
+    }
 }
