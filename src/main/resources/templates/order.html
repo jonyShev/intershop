@@ -23,25 +23,25 @@
             <h2 th:text="${'Заказ №'+order.id}"></h2>
         </td>
     </tr>
-    <tr th:each="orderItem : ${order.items}">
+    <tr th:each="orderItem : ${orderItems}">
         <td>
             <table>
                 <tr>
                     <td>
-                        <a th:href="${'/items/'+orderItem.item.id}">
-                            <img width="300" height="300" th:src="${'http://localhost:8080/'+orderItem.item.imgPath}">
+                        <a th:href="${'/items/'+orderItem.itemId}">
+                            <img width="300" height="300" th:src="${'http://localhost:8080/'+orderItem.imgPath}">
                         </a>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <b th:text="${orderItem.item.title}"></b>
+                        <b th:text="${orderItem.title}"></b>
                     </td>
                     <td>
-                        <b th:text="${orderItem.item.count}+' шт.'"></b>
+                        <b th:text="${orderItem.count}+' шт.'"></b>
                     </td>
                     <td>
-                        <b th:text="${orderItem.item.price*orderItem.count}+' руб.'"></b>
+                        <b th:text="${orderItem.price*orderItem.count}+' руб.'"></b>
                     </td>
                 </tr>
             </table>
