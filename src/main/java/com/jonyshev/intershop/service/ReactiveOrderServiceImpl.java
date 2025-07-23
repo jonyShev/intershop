@@ -1,6 +1,7 @@
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.dto.OrderWithItemsDto;
 import com.jonyshev.intershop.model.Order;
 import com.jonyshev.intershop.model.OrderItem;
 import com.jonyshev.intershop.repository.OrderItemRepository;
@@ -56,5 +57,19 @@ public class ReactiveOrderServiceImpl implements ReactiveOrderService {
     public Mono<Order> findById(Long orderId) {
         return orderRepository.findById(orderId)
                 .switchIfEmpty(Mono.error(new IllegalArgumentException("Order not found " + orderId)));
+    }
+
+    @Override
+    public Mono<List<OrderWithItemsDto>> getOrderWithItems() {
+        return orderRepository.findAll()
+                .flatMap(order -> orderItemRepository.findAllByOrderId(order.getId())
+                        .collectList()
+                        .map(orderItems -> OrderWithItemsDto.builder()
+                                .id(order.getId())
+                                .totalSum(order.getTotalSum())
+                                .orderItems(orderItems)
+                                .build())
+
+                ).collectList();
     }
 }

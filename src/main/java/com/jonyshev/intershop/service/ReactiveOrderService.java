@@ -1,6 +1,7 @@
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.dto.OrderWithItemsDto;
 import com.jonyshev.intershop.model.Order;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
@@ -16,4 +17,6 @@ public interface ReactiveOrderService {
     Mono<Tuple2<List<ItemDto>, BigDecimal>> getItemsAndTotal(WebSession session);
 
     Mono<Order> findById(Long orderId);
+
+    Mono<List<OrderWithItemsDto>> getOrderWithItems();
 }
