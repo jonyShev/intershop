@@ -20,8 +20,8 @@
                 <a th:text="${'Заказ №'+order.id}" th:href="${'/orders/'+order.id}"></a>
             </h2>
             <table>
-                <tr th:each="orderItem : ${order.items}">
-                    <td th:text="${orderItem.item.title+' ('+orderItem.count+' шт.) '+(orderItem.item.price*orderItem.count)+' руб.'}"></td>
+                <tr th:each="orderItem : ${order.orderItems}">
+                    <td th:text="${orderItem.title+' ('+orderItem.count+' шт.) '+(orderItem.price*orderItem.count)+' руб.'}"></td>
                 </tr>
             </table>
             <p>
