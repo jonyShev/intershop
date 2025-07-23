@@ -36,4 +36,11 @@ public class ReactiveOrderController {
                 })
                 .thenReturn("order");
     }
+
+    @GetMapping("/orders")
+    public Mono<String> showOrders(Model model) {
+        return reactiveOrderService.getOrderWithItems()
+                .doOnNext(orders -> model.addAttribute("orders", orders))
+                .thenReturn("orders");
+    }
 }
