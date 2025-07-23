@@ -2,6 +2,7 @@ package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
+import com.jonyshev.intershop.model.Item;
 import com.jonyshev.intershop.repository.ReactiveItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -36,6 +38,17 @@ public class CartServiceImpl implements CartService {
     public void deleteItem(Long id, WebSession session) {
         Map<Long, Integer> cart = getCart(session);
         cart.remove(id);
+    }
+
+    @Override
+    public Mono<List<Item>> getCartItems(WebSession session) {
+        Map<Long, Integer> cart = getCart(session);
+        return Flux.fromIterable(cart.entrySet())
+                .flatMap(entry -> {
+                    Long id = entry.getKey();
+                    return itemRepository.findById(id);
+                })
+                .collectList();
     }
 
     @Override
@@ -68,6 +81,12 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    public Mono<Void> clear(WebSession session) {
+        getCart(session).clear();
+        return Mono.empty();
+    }
+
+    @Override
     public Mono<Void> updateCartAction(Long id, CartAction action, WebSession session) {
         switch (action) {
             case PLUS -> addItem(id, session);
@@ -78,7 +97,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public Flux<ItemDto> getCartItemsDto(WebSession session) {
+    public Mono<List<ItemDto>> getCartItemsDto(WebSession session) {
         Map<Long, Integer> cart = getCart(session);
         return Flux.fromIterable(cart.entrySet())
                 .flatMap(entry -> {
@@ -93,85 +112,12 @@ public class CartServiceImpl implements CartService {
                                     .price(item.getPrice())
                                     .count(count)
                                     .build());
-                });
+                })
+                .collectList();
     }
 
     @SuppressWarnings("unchecked")
     private Map<Long, Integer> getCart(WebSession session) {
         return (Map<Long, Integer>) session.getAttributes().computeIfAbsent(CART_KEY, key -> new HashMap<Long, Integer>());
     }
-
-
-   /* private final Map<Long, Integer> cart = new HashMap<>();
-
-    public CartServiceImpl(ItemService itemService) {
-        this.itemService = itemService;
-    }
-
-    @Override
-    public List<ItemDto> getCartItemsDto() {
-        return cart.entrySet().stream()
-                .map(entry -> {
-                    Long id = entry.getKey();
-                    Item item = itemService.getItemById(id)
-                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-                    return itemService.mapToDto(item, this);
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Item> getCartItems() {
-        return cart.entrySet().stream()
-                .map(entry -> {
-                    Long id = entry.getKey();
-                    Integer count = entry.getValue();
-                    Item item = itemService.getItemById(id)
-                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-                    item.setCount(count);
-                    return item;
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public BigDecimal getTotalPrice() {
-        return cart.entrySet().stream()
-                .map(entry -> {
-                    Long id = entry.getKey();
-                    Integer count = entry.getValue();
-                    Item item = itemService.getItemById(id)
-                            .orElseThrow(() -> new IllegalArgumentException("Item not found " + id));
-
-                    return item.getPrice().multiply(BigDecimal.valueOf(count));
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return cart.isEmpty();
-    }
-
-
-    @Override
-    public int getCountForItem(Long id) {
-        return cart.getOrDefault(id, 0);
-    }
-
-    @Override
-    public void clear() {
-        ў
-        cart.clear();
-    }
-
-    @Override
-    public void updateCartAction(Long id, CartAction action) {
-        switch (action) {
-            case PLUS -> this.addItem(id);
-            case MINUS -> this.decreaseItem(id);
-            case DELETE -> this.deleteItem(id);
-        }
-    }*/
-
 }
