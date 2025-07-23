@@ -19,6 +19,5 @@ public class Order {
 
     @Id
     private Long id;
-
     private BigDecimal totalSum;
 }

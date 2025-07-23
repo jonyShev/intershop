@@ -1,7 +1,7 @@
 package com.jonyshev.intershop.config;
 
 import com.jonyshev.intershop.model.Item;
-import com.jonyshev.intershop.repository.ReactiveItemRepository;
+import com.jonyshev.intershop.repository.ItemRepository;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +13,7 @@ import java.util.List;
 public class DataInit {
 
     @Bean
-    public ApplicationRunner initItems(ReactiveItemRepository itemRepository) {
+    public ApplicationRunner initItems(ItemRepository itemRepository) {
         return args -> itemRepository.count()
                 .filter(count -> count == 0)
                 .flatMapMany(rep -> itemRepository.saveAll(List.of(

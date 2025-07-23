@@ -3,7 +3,7 @@ package com.jonyshev.intershop.service;
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
-import com.jonyshev.intershop.repository.ReactiveItemRepository;
+import com.jonyshev.intershop.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.WebSession;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class CartServiceImpl implements CartService {
 
     private final static String CART_KEY = "CART";
-    private final ReactiveItemRepository itemRepository;
+    private final ItemRepository itemRepository;
 
     @Override
     public void addItem(Long id, WebSession session) {

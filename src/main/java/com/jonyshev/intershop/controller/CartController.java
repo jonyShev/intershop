@@ -4,7 +4,7 @@ import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.service.CartService;
-import com.jonyshev.intershop.service.ReactiveOrderService;
+import com.jonyshev.intershop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,10 +20,10 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-public class ReactiveCartController {
+public class CartController {
 
     private final CartService cartService;
-    private final ReactiveOrderService reactiveOrderService;
+    private final OrderService orderService;
 
     @GetMapping("/cart/items")
     public Mono<String> getCartItems(WebSession session, Model model) {
@@ -55,11 +55,11 @@ public class ReactiveCartController {
 
     @PostMapping("/buy")
     public Mono<String> buy(WebSession session) {
-        return reactiveOrderService.getItemsAndTotal(session)
+        return orderService.getItemsAndTotal(session)
                 .flatMap(tuple -> {
                     List<ItemDto> itemDtos = tuple.getT1();
                     BigDecimal total = tuple.getT2();
-                    return reactiveOrderService.createOrder(itemDtos, total, session);
+                    return orderService.createOrder(itemDtos, total, session);
                 })
                 .map(order -> "redirect:/orders/" + order.getId() + "?newOrder=true");
     }

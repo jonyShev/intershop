@@ -4,7 +4,7 @@ import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.model.PagingInfo;
 import com.jonyshev.intershop.service.CartService;
-import com.jonyshev.intershop.service.ReactiveItemService;
+import com.jonyshev.intershop.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,9 +16,9 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-public class ReactiveItemController {
+public class ItemController {
 
-    private final ReactiveItemService reactiveItemService;
+    private final ItemService reactiveItemService;
     private final CartService cartService;
 
     @GetMapping("/")
@@ -62,12 +62,6 @@ public class ReactiveItemController {
                 .doOnNext(itemDto -> model.addAttribute("item", itemDto))
                 .thenReturn("item");
     }
-
-   /* c
-    public String updateCartFromItemPage(@PathVariable Long id, @RequestParam CartAction action) {
-        cartService.updateCartAction(id, action);
-        return "redirect:/items/" + id;
-    }*/
 
     @PostMapping("/items/{id}")
     public Mono<String> updateCartFromItemPage(@PathVariable Long id,

@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 
 @Repository
-public interface ReactiveItemRepository extends ReactiveCrudRepository<Item, Long> {
+public interface ItemRepository extends ReactiveCrudRepository<Item, Long> {
 
     @Query("""
                 SELECT * FROM items

@@ -1,18 +1,22 @@
-/*
 package com.jonyshev.intershop.service;
 
-import com.jonyshev.intershop.model.Item;
+import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.dto.OrderWithItemsDto;
 import com.jonyshev.intershop.model.Order;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 public interface OrderService {
-    List<Order> getAllOrders();
 
-    Optional<Order> findById(Long id);
+    Mono<Order> createOrder(List<ItemDto> items, BigDecimal totalSum, WebSession session);
 
-    Order createOrder(List<Item> items, BigDecimal totalSum);
+    Mono<Tuple2<List<ItemDto>, BigDecimal>> getItemsAndTotal(WebSession session);
+
+    Mono<Order> findById(Long orderId);
+
+    Mono<List<OrderWithItemsDto>> getOrderWithItems();
 }
-*/

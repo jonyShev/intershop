@@ -17,14 +17,9 @@ public class Item {
 
     @Id
     private Long id;
-
     private String title;
-
     private String description;
-
     private String imgPath;
-
     private BigDecimal price;
-
     private Integer count = 0;
 }

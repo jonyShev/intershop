@@ -3,7 +3,7 @@ package com.jonyshev.intershop.controller;
 import com.jonyshev.intershop.model.Order;
 import com.jonyshev.intershop.model.OrderItem;
 import com.jonyshev.intershop.service.OrderItemService;
-import com.jonyshev.intershop.service.ReactiveOrderService;
+import com.jonyshev.intershop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,16 +15,16 @@ import reactor.core.publisher.Mono;
 
 @Controller
 @RequiredArgsConstructor
-public class ReactiveOrderController {
+public class OrderController {
 
-    private final ReactiveOrderService reactiveOrderService;
+    private final OrderService orderService;
     private final OrderItemService orderItemService;
 
     @GetMapping("/orders/{id}")
     public Mono<String> showOrder(@PathVariable Long id,
                                   @RequestParam(defaultValue = "false") boolean newOrder,
                                   Model model) {
-        Mono<Order> orderMono = reactiveOrderService.findById(id);
+        Mono<Order> orderMono = orderService.findById(id);
         Flux<OrderItem> orderItemFlux = orderItemService.findAllByOrderId(id);
 
 
@@ -39,7 +39,7 @@ public class ReactiveOrderController {
 
     @GetMapping("/orders")
     public Mono<String> showOrders(Model model) {
-        return reactiveOrderService.getOrderWithItems()
+        return orderService.getOrderWithItems()
                 .doOnNext(orders -> model.addAttribute("orders", orders))
                 .thenReturn("orders");
     }

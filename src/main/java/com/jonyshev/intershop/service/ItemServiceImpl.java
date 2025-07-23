@@ -1,54 +1,28 @@
-/*
 package com.jonyshev.intershop.service;
 
 import com.jonyshev.intershop.dto.ItemDto;
-import com.jonyshev.intershop.mapper.ItemMapper;
 import com.jonyshev.intershop.model.Item;
 import com.jonyshev.intershop.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
-    private final ItemMapper itemMapper;
+    private final CartService cartService;
 
     @Override
-    public Optional<Item> getItemById(Long id) {
-        return itemRepository.findById(id);
-    }
-
-
-    @Override
-    public Page<Item> findItems(String search, String sort, Pageable pageable) {
-        if (search == null || search.isBlank()) {
-            return itemRepository.findAll(pageable);
-        } else {
-            return itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                    search, search, pageable);
-        }
-    }
-
-    @Override
-    public List<ItemDto> mapToDto(List<Item> items, CartService cartService) {
-        return items.stream()
-                .map(item -> itemMapper.toDto(item, cartService))
-                .toList();
-    }
-
-    @Override
-    public ItemDto mapToDto(Item item, CartService cartService) {
-        return itemMapper.toDto(item, cartService);
+    public Flux<Item> getAllItems(String search, String sort, int pageSize, int pageNumber) {
+        int offset = (pageNumber - 1) * pageSize;
+        return itemRepository.searchItems(search, sort, pageSize, offset);
     }
 
     @Override
@@ -61,17 +35,30 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Sort getSort(String sort) {
-        return switch (sort) {
-            case "ALPHA" -> Sort.by("title");
-            case "PRICE" -> Sort.by("price");
-            default -> Sort.unsorted();
-        };
+    public Mono<ItemDto> mapToDto(Item item, WebSession session) {
+        return cartService.getCountForItem(item.getId(), session)
+                .map(count -> ItemDto.builder()
+                        .id(item.getId())
+                        .title(item.getTitle())
+                        .description(item.getDescription())
+                        .imgPath(item.getImgPath())
+                        .price(item.getPrice())
+                        .count(count)
+                        .build());
     }
 
     @Override
-    public Pageable buildPageable(int pageNumber, int pageSize, String sort) {
-        Sort resultSort = getSort(sort);
-        return PageRequest.of(pageNumber - 1, pageSize, resultSort);
+    public Mono<ItemDto> getItemDtoById(Long id, WebSession session) {
+        return itemRepository.findById(id)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Item not found" + id)))
+                .flatMap(item -> mapToDto(item, session));
     }
-}*/
+
+    @Override
+    public Mono<List<List<ItemDto>>> getItemChunks(String search, String sort, int pageSize, int pageNumber, WebSession session) {
+        return getAllItems(search, sort, pageSize, pageNumber)
+                .flatMap(item -> mapToDto(item, session))
+                .collectList()
+                .map(itemDtos -> chunkItems(itemDtos, 3));
+    }
+}
