@@ -12,9 +12,13 @@ CREATE TABLE IF NOT EXISTS orders (
     total_sum DOUBLE
 );
 
-CREATE TABLE IF NOT EXISTS order_item (
+CREATE TABLE IF NOT EXISTS order_items (
     id IDENTITY PRIMARY KEY,
-    item_id BIGINT,
     order_id BIGINT,
+    item_id BIGINT,
+    title VARCHAR(255),
+    description VARCHAR(1000),
+    img_path VARCHAR(255),
+    price DOUBLE,
     count INT
 );
