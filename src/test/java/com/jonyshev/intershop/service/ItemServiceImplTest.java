@@ -1,135 +1,95 @@
-/*
 package com.jonyshev.intershop.service;
 
-import com.jonyshev.intershop.mapper.ItemMapper;
+import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.Item;
 import com.jonyshev.intershop.repository.ItemRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class ItemServiceImplTest {
-
     @Mock
     private ItemRepository itemRepository;
 
     @Mock
-    private ItemMapper itemMapper;
+    private CartService cartService;
 
     @InjectMocks
     private ItemServiceImpl itemService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @Mock
+    private WebSession session;
 
     @Test
-    void testGetItemById() {
+    void getItemDtoByIdTest() {
         //given
-        Long id = 1L;
-        Item item = Item.builder()
-                .id(id)
-                .title("Burger")
-                .build();
-
-        when(itemRepository.findById(id)).thenReturn(Optional.of(item));
-
-        //when
-        Optional<Item> result = itemService.getItemById(id);
-
-        //then
-        assertThat(result).isPresent();
-        assertThat(result.get().getId()).isEqualTo(id);
-        assertThat(result.get().getTitle()).isEqualTo(item.getTitle());
-
-        verify(itemRepository, times(1)).findById(id);
-    }
-
-    @Test
-    void testFindItemsWhenSearchNotNull() {
-        //given
-        String search = "burger";
-        String sort = "ALPHA";
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(sort));
-
         Item item = Item.builder()
                 .id(1L)
-                .title("burger")
+                .title("TITLE")
+                .count(1)
                 .build();
 
-        Page<Item> page = new PageImpl<>(List.of(item));
-
-        when(itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search, search, pageable)).thenReturn(page);
-
+        //Mock
+        when(itemRepository.findById(anyLong())).thenReturn(Mono.just(item));
+        when(cartService.getCountForItem(anyLong(), any())).thenReturn(Mono.just(1));
         //when
-        Page<Item> result = itemService.findItems(search, sort, pageable);
+        Mono<ItemDto> result = itemService.getItemDtoById(item.getId(), session);
 
         //then
-        assertThat(result.getContent()).hasSize(1);
-        verify(itemRepository, times(1)).findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(search, search, pageable);
+        StepVerifier.create(result)
+                .expectNextMatches(dto ->
+                        dto.getId().equals(1L) &&
+                                dto.getTitle().equals("TITLE") &&
+                                dto.getCount() == 1
+                )
+                .verifyComplete();
     }
 
     @Test
-    void testFindItemsWhenSearchNull() {
+    void getItemChunksTest() {
         //given
-        String sort = "ALPHA";
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(sort));
+        String search = "";
+        String sort = "NO";
+        int pageSize = 6;
+        int pageNumber = 1;
+        int offset = 0;
 
-        Item item = Item.builder()
-                .id(1L)
-                .title("burger")
-                .build();
+        List<Item> items = List.of(
+                Item.builder().id(1L).title("Item1").price(BigDecimal.valueOf(10)).build(),
+                Item.builder().id(2L).title("Item2").price(BigDecimal.valueOf(20)).build(),
+                Item.builder().id(3L).title("Item3").price(BigDecimal.valueOf(30)).build(),
+                Item.builder().id(4L).title("Item4").price(BigDecimal.valueOf(40)).build()
+        );
 
-        Page<Item> page = new PageImpl<>(List.of(item));
-
-        when(itemRepository.findAll(pageable)).thenReturn(page);
-
+        //Mock
+        when(itemRepository.searchItems(eq(search), eq(sort), eq(pageSize), eq(offset)))
+                .thenReturn(Flux.fromIterable(items));
+        for (Item item : items) {
+            when(cartService.getCountForItem(anyLong(), any())).thenReturn(Mono.just(1));
+        }
         //when
-        Page<Item> result = itemService.findItems(null, sort, pageable);
+        Mono<List<List<ItemDto>>> result = itemService.getItemChunks(search, sort, pageSize, pageNumber, session);
 
         //then
-        assertThat(result.getContent()).hasSize(1);
-        verify(itemRepository, times(1)).findAll(pageable);
+        StepVerifier.create(result)
+                .assertNext(chunks -> {
+                    assert chunks.size() == 2;
+                    assert chunks.get(0).size() == 3;
+                    assert chunks.get(1).size() == 1;
+                })
+                .verifyComplete();
     }
-
-    @Test
-    void testGetSort() {
-        //when
-        Sort noSort = itemService.getSort("NO");
-        Sort alphaSort = itemService.getSort("ALPHA");
-        Sort priceSort = itemService.getSort("PRICE");
-
-        //then
-        assertThat(noSort.isSorted()).isFalse();
-        assertThat(alphaSort).isEqualTo(Sort.by("title"));
-        assertThat(priceSort).isEqualTo(Sort.by("price"));
-    }
-
-    //public Pageable buildPageable(int pageNumber, int pageSize, String sort) {
-    @Test
-    void testBuildPageable() {
-        //given
-        int pageNumber = 2;
-        int pageSize = 10;
-        String sort = "PRICE";
-
-        //when
-        Pageable pageable = itemService.buildPageable(pageNumber, pageSize, sort);
-
-        //then
-        assertThat(pageable.getPageNumber()).isEqualTo(pageNumber - 1);
-        assertThat(pageable.getPageSize()).isEqualTo(pageSize);
-        assertThat(pageable.getSort()).isEqualTo(Sort.by("price"));
-    }
-
-}*/
+}
