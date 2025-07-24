@@ -1,149 +1,120 @@
-/*
 package com.jonyshev.intershop.service;
 
-import com.jonyshev.intershop.dto.ItemDto;
+import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.Item;
-import org.junit.jupiter.api.BeforeEach;
+import com.jonyshev.intershop.repository.ItemRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.WebSession;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class CartServiceImplTest {
 
-    @Mock
-    private ItemService itemService;
-
+    @Spy
     @InjectMocks
     private CartServiceImpl cartService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @Mock
+    private ItemRepository itemRepository;
+
+    @Mock
+    private WebSession session;
 
     @Test
-    public void testAddItem() {
-        cartService.addItem(1L);
-        assertThat(cartService.getCountForItem(1L)).isEqualTo(1);
-    }
-
-    @Test
-    public void testDecreaseItem() {
-        cartService.addItem(1L);
-        cartService.addItem(1L);
-        cartService.addItem(1L);
-        cartService.decreaseItem(1L);
-        assertThat(cartService.getCountForItem(1L)).isEqualTo(2);
-    }
-
-    @Test
-    public void testDeleteItem() {
-        cartService.addItem(1L);
-        cartService.deleteItem(1L);
-        assertThat(cartService.getCountForItem(1L)).isEqualTo(0);
-    }
-
-    @Test
-    public void testClearCart() {
-        cartService.addItem(1L);
-        cartService.addItem(2L);
-        cartService.clear();
-        assertThat(cartService.isEmpty()).isTrue();
-    }
-
-    @Test
-    void testIsEmpty() {
-        assertThat(cartService.isEmpty()).isTrue();
-        cartService.addItem(1L);
-        assertThat(cartService.isEmpty()).isFalse();
-    }
-
-    @Test
-    void testGetCountForItem() {
-        cartService.addItem(1L);
-        cartService.addItem(1L);
-        assertThat(cartService.getCountForItem(1L)).isEqualTo(2);
-    }
-
-    @Test
-    void testGetCartItemsDto() {
+    void getCartItemsTest() {
         //given
-        Item item = Item.builder()
-                .id(1L)
-                .build();
-
-        ItemDto itemDto = ItemDto.builder()
-                .id(1L)
-                .build();
-
-        cartService.addItem(1L);
-
-        when(itemService.getItemById(1L)).thenReturn(Optional.of(item));
-        when(itemService.mapToDto(item, cartService)).thenReturn(itemDto);
-
+        HashMap<String, Object> attributes = new HashMap<>();
+        HashMap<Long, Integer> cart = new HashMap<>();
+        cart.put(1L, 2);
+        cart.put(2L, 1);
+        attributes.put("CART", cart);
+        Item item1 = Item.builder().id(1L).title("Item 1").build();
+        Item item2 = Item.builder().id(2L).title("Item 2").build();
+        //mock
+        when(session.getAttributes()).thenReturn(attributes);
+        when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
+        when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
         //when
-        List<ItemDto> result = cartService.getCartItemsDto();
+        Mono<List<Item>> result = cartService.getCartItems(session);
+        //then
+        StepVerifier.create(result)
+                .assertNext(items -> {
+                    assert items.size() == 2;
+                    assert items.get(0).getId().equals(1L);
+                    assert items.get(1).getId().equals(2L);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void getTotalPriceTest(){
+        //given
+        HashMap<String, Object> attributes = new HashMap<>();
+        HashMap<Long, Integer> cart = new HashMap<>();
+        cart.put(1L, 2);
+        cart.put(2L, 1);
+        attributes.put("CART", cart);
+        Item item1 = Item.builder().id(1L).price(BigDecimal.valueOf(10)).build();
+        Item item2 = Item.builder().id(2L).price(BigDecimal.valueOf(30)).build();
+        //mock
+        when(session.getAttributes()).thenReturn(attributes);
+        when(itemRepository.findById(1L)).thenReturn(Mono.just(item1));
+        when(itemRepository.findById(2L)).thenReturn(Mono.just(item2));
+        //when
+        Mono<BigDecimal> result = cartService.getTotalPrice(session);
 
         //then
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.get(0).getId()).isEqualTo(1L);
-        verify(itemService, times(1)).getItemById(1L);
-        verify(itemService, times(1)).mapToDto(item, cartService);
-
+        StepVerifier.create(result)
+                .expectNext(BigDecimal.valueOf(50))
+                .verifyComplete();
     }
 
     @Test
-    void testGetCartItems() {
-        //given
-        Item item = Item.builder()
-                .id(1L)
-                .title("burger")
-                .build();
+    void updateCartAction_shouldCallAddItem() {
+        // given
+        Long itemId = 1L;
 
-        cartService.addItem(1L);
-        cartService.addItem(1L);
+        // mock internal method
+        doNothing().when(cartService).addItem(itemId, session);
 
-        when(itemService.getItemById(1L)).thenReturn(Optional.of(item));
+        // when
+        cartService.updateCartAction(itemId, CartAction.PLUS, session).block();
 
-        //when
-        List<Item> items = cartService.getCartItems();
-
-        //then
-        assertThat(items).hasSize(1);
-        assertThat(items.get(0).getId()).isEqualTo(1L);
-        assertThat(items.get(0).getTitle()).isEqualTo("burger");
-        verify(itemService, times(1)).getItemById(1L);
+        // then
+        verify(cartService).addItem(itemId, session);
+        verify(cartService, never()).decreaseItem(any(), any());
+        verify(cartService, never()).deleteItem(any(), any());
     }
 
     @Test
-    void testGetTotalPrice() {
-        //given
-        Item item = Item.builder()
-                .id(1L)
-                .title("burger")
-                .price(BigDecimal.valueOf(100))
-                .build();
+    void updateCartAction_shouldCallDecreaseItem() {
+        Long itemId = 2L;
+        doNothing().when(cartService).decreaseItem(itemId, session);
+        cartService.updateCartAction(itemId, CartAction.MINUS, session).block();
+        verify(cartService).decreaseItem(itemId, session);
+        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).deleteItem(any(), any());
+    }
 
-        for (int i = 0; i < 5; i++) {
-            cartService.addItem(1L);
-        }
-
-        when(itemService.getItemById(1L)).thenReturn(Optional.of(item));
-
-        //when
-        BigDecimal result = cartService.getTotalPrice();
-
-        //then
-        assertThat(result).isEqualTo(BigDecimal.valueOf(500));
-        verify(itemService, times(1)).getItemById(1L);
+    @Test
+    void updateCartAction_shouldCallDeleteItem() {
+        Long itemId = 3L;
+        doNothing().when(cartService).deleteItem(itemId, session);
+        cartService.updateCartAction(itemId, CartAction.DELETE, session).block();
+        verify(cartService).deleteItem(itemId, session);
+        verify(cartService, never()).addItem(any(), any());
+        verify(cartService, never()).decreaseItem(any(), any());
     }
 }
-*/
