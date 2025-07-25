@@ -1,45 +1,46 @@
-/*
 package com.jonyshev.intershop.repository;
 
 import com.jonyshev.intershop.model.Item;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.r2dbc.core.DatabaseClient;
+import reactor.core.publisher.Flux;
+import reactor.test.StepVerifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.math.BigDecimal;
+import java.util.List;
 
-@DataJpaTest
+@DataR2dbcTest
 public class ItemRepositoryTest {
 
     @Autowired
     private ItemRepository itemRepository;
 
-    @Test
-    void testFindByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase() {
-        //given
-        Item item1 = Item.builder()
-                .title("Burger")
-                .description("Delicious")
-                .build();
+    @BeforeEach
+    void setup(@Autowired DatabaseClient databaseClient) {
+        databaseClient.sql("DELETE FROM items").then().block();
 
-        Item item2 = Item.builder()
-                .title("Pizza")
-                .description("Italian food")
-                .build();
+        List<Item> items = List.of(
+                Item.builder().title("Маргарита").description("Классическая пицца").imgPath("/images/pizza.png").price(BigDecimal.valueOf(550)).build(),
+                Item.builder().title("Дьявола").description("Острая пицца").imgPath("/images/burger.png").price(BigDecimal.valueOf(350)).build(),
+                Item.builder().title("Суши").description("Набор роллов").imgPath("/images/sushi.png").price(BigDecimal.valueOf(750)).build()
+        );
 
-        itemRepository.save(item1);
-        itemRepository.save(item2);
-
-        Pageable pageable = PageRequest.of(0, 10);
-
-        //when
-        Page<Item> result = itemRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase("burger", "burger", pageable);
-
-        //then
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getTitle()).isEqualTo("Burger");
+        itemRepository.saveAll(items).collectList().block();
     }
-}*/
+
+    @Test
+    void searchItems_shouldReturnMatchingItems_sortedByPrice() {
+        //when
+        Flux<Item> result = itemRepository.searchItems("пицца", "PRICE", 10, 0);
+        //then
+        StepVerifier.create(result)
+                .expectNextMatches(item -> item.getTitle().equals("Дьявола"))
+                .expectNextMatches(item -> item.getTitle().equals("Маргарита"))
+                .verifyComplete();
+    }
+
+
+}
