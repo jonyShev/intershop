@@ -40,8 +40,19 @@ class OrderControllerTest {
         order.setId(orderId);
         order.setTotalSum(BigDecimal.valueOf(100));
 
-        OrderItem item1 = OrderItem.builder().orderId(orderId).title("item1").build();
-        OrderItem item2 = OrderItem.builder().orderId(orderId).title("item2").build();
+        OrderItem item1 = OrderItem.builder()
+                .orderId(orderId)
+                .title("item1")
+                .price(BigDecimal.valueOf(20))
+                .count(2)
+                .build();
+
+        OrderItem item2 = OrderItem.builder()
+                .orderId(orderId)
+                .title("item2")
+                .price(BigDecimal.valueOf(30))
+                .count(2)
+                .build();
 
         when(orderService.findById(orderId)).thenReturn(Mono.just(order));
         when(orderItemService.findAllByOrderId(orderId)).thenReturn(Flux.just(item1, item2));
@@ -73,7 +84,11 @@ class OrderControllerTest {
                 .id(order1.getId())
                 .totalSum(order1.getTotalSum())
                 .orderItems(List.of(
-                        OrderItem.builder().title("itemA").build()
+                        OrderItem.builder()
+                                .title("itemA")
+                                .price(BigDecimal.valueOf(10))
+                                .count(1)
+                                .build()
                 ))
                 .build();
 
@@ -81,7 +96,11 @@ class OrderControllerTest {
                 .id(order2.getId())
                 .totalSum(order2.getTotalSum())
                 .orderItems(List.of(
-                        OrderItem.builder().title("itemB").build()
+                        OrderItem.builder()
+                                .title("itemB")
+                                .price(BigDecimal.valueOf(15))
+                                .count(2)
+                                .build()
                 ))
                 .build();
 
@@ -99,4 +118,5 @@ class OrderControllerTest {
                     assert html.contains("itemB");
                 });
     }
+
 }
