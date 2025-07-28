@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemController {
 
-    private final ItemService reactiveItemService;
+    private final ItemService itemService;
     private final CartService cartService;
 
     @GetMapping("/")
@@ -33,7 +33,7 @@ public class ItemController {
                                     @RequestParam(defaultValue = "1") int pageNumber,
                                     WebSession session,
                                     Model model) {
-        return reactiveItemService.getItemChunks(search, sort, pageSize, pageNumber, session)
+        return itemService.getItemChunks(search, sort, pageSize, pageNumber, session)
                 .doOnNext(chunks -> {
                     model.addAttribute("items", chunks);
                     model.addAttribute("search", search);
@@ -58,7 +58,7 @@ public class ItemController {
 
     @GetMapping("/items/{id}")
     public Mono<String> getItemPage(@PathVariable Long id, WebSession session, Model model) {
-        return reactiveItemService.getItemDtoById(id, session)
+        return itemService.getItemDtoById(id, session)
                 .doOnNext(itemDto -> model.addAttribute("item", itemDto))
                 .thenReturn("item");
     }

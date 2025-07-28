@@ -41,6 +41,4 @@ public class ItemRepositoryTest {
                 .expectNextMatches(item -> item.getTitle().equals("Маргарита"))
                 .verifyComplete();
     }
-
-
 }
