@@ -1,29 +1,32 @@
-# Intershop - Витрина интернет-магазина
+# Intershop - Витрина интернет-магазина (реактивная версия)
 
 ## Описание проекта
 
-Spring Boot приложение "Витрина интернет-магазина".  
-Позволяет пользователям просматривать товары, добавлять их в корзину и оформлять заказы.
+Реактивное веб-приложение на базе Spring Boot 3, использующее стек WebFlux и Spring Data R2DBC. 
+Проект представляет собой витрину интернет-магазина с возможностью добавления товаров в корзину, оформления заказов и просмотра истории покупок.
 
 ## Технологии
 
 - Java 21
-- Spring Boot 3.x
-- Spring Web MVC
-- Spring Data JPA + Hibernate
-- H2 Database (для разработки и тестов)
-- Thymeleaf
+- Spring Boot 3
+- Spring WebFlux
+- Spring Data R2DBC
+- R2DBC H2
 - Maven
+- Lombok + MapStruct
 - Docker
 
-## Как собрать проект
+## Как собрать и запустить проект
+
+```bash
+./mvnw clean install
+./mvnw spring-boot:run
+```
+
+## Сборка JAR
 
 ```bash
 ./mvnw clean package
-```
-
-# Как запустить локально
-```bash
 java -jar target/intershop-0.0.1-SNAPSHOT.jar
 ```
 
@@ -40,7 +43,7 @@ docker run -p 8080:8080 intershop
 ## Тестирование
 Юнит-тесты (сервисы):
 ```bash
-mvn test
+./mvnw test
 ```
 
 ## Интеграционные тесты (JPA и WebMvc):
@@ -57,6 +60,6 @@ mvn test
 
 /dto — DTO
 
-/mapper — Мапперы
-
 /resources/templates — HTML-шаблоны
+
+## v2.0 — текущая реактивная версия (Spring WebFlux + R2DBC)
