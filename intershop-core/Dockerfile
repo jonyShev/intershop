@@ -5,7 +5,7 @@ FROM eclipse-temurin:21-jdk-alpine
 WORKDIR /app
 
 # Копируем jar-файл внутрь контейнера
-COPY target/intershop-0.0.1-SNAPSHOT.jar app.jar
+COPY ../target/intershop-0.0.1-SNAPSHOT.jar app.jar
 
 # Копируем папку static внутрь контейнера
 COPY src/main/resources/static /app/static
