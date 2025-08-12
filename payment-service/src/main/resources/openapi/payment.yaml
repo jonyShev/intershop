@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  version: 1.0.0
+paths:
+  /api/v1/balance:
+    get:
+      tags: [ Payment ]
+      operationId: getBalance
+      responses:
+        '200':
+          description: Current balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+  /api/v1/pay:
+    post:
+      tags: [ Payment ]
+      operationId: pay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayRequest'
+      responses:
+        '200':
+          description: Payment accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayResponse'
+        '402':
+          description: Insufficient funds
+        '422':
+          description: Validation error
+
+components:
+  schemas:
+    BalanceResponse:
+      type: object
+      required: [ amount, currency ]
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 50.00
+        currency:
+          type: string
+          example: EUR
+    PayRequest:
+      type: object
+      required: [ amount, currency ]
+      properties:
+        amount:
+          type: number
+          format: double
+          example: 12.99
+        currency:
+          type: string
+          example: EUR
+        orderId:
+          type: integer
+          format: int64
+          example: 123
+    PayResponse:
+      type: object
+      required: [ success, transactionId ]
+      properties:
+        success:
+          type: boolean
+          example: true
+        transactionId:
+          type: string
+          example: trx_abc123
