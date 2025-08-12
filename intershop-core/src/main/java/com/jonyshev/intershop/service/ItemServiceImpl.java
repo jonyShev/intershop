@@ -1,16 +1,15 @@
 package com.jonyshev.intershop.service;
 
+import com.jonyshev.intershop.dto.ItemCacheDto;
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.Item;
 import com.jonyshev.intershop.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final CartService cartService;
-    private final ReactiveRedisTemplate<String, ItemDto> redisTemplate;
+    private final ItemCacheService itemCacheService;
 
     @Override
     public Flux<Item> getAllItems(String search, String sort, int pageSize, int pageNumber) {
@@ -50,27 +49,65 @@ public class ItemServiceImpl implements ItemService {
                         .build());
     }
 
+    private ItemCacheDto mapToCacheDto(Item item) {
+        return new ItemCacheDto(
+                item.getId(),
+                item.getTitle(),
+                item.getDescription(),
+                item.getImgPath(),
+                item.getPrice()
+        );
+    }
+
+    private Mono<ItemDto> enrichWithCount(ItemCacheDto cacheDto, WebSession session) {
+        return cartService.getCountForItem(cacheDto.id(), session)
+                .map(count -> ItemDto.builder()
+                        .id(cacheDto.id())
+                        .title(cacheDto.title())
+                        .description(cacheDto.description())
+                        .imgPath(cacheDto.imgPath())
+                        .price(cacheDto.price())
+                        .count(count)
+                        .build());
+    }
+
     @Override
     public Mono<ItemDto> getItemDtoById(Long id, WebSession session) {
-        String key = "item:" + id;
-        return redisTemplate.opsForValue().get(key)
+        // сначала пытаемся взять из кеша «чистый» ItemCacheDto, затем добавляем count из корзины
+        return itemCacheService.getItem(id)
+                .flatMap(cacheDto -> enrichWithCount(cacheDto, session))
                 .switchIfEmpty(
                         itemRepository.findById(id)
-                                .switchIfEmpty(Mono.error(new IllegalArgumentException("Item not found" + id)))
-                                .flatMap(item -> mapToDto(item, session))
-                                .flatMap(dto -> redisTemplate
-                                        .opsForValue()
-                                        .set(key, dto, Duration.ofMinutes(3))
-                                        .thenReturn(dto)
-                                )
+                                .switchIfEmpty(Mono.error(new IllegalArgumentException("Item not found: " + id)))
+                                .flatMap(item -> {
+                                    ItemCacheDto cacheDto = mapToCacheDto(item);
+                                    return itemCacheService.putItem(cacheDto)
+                                            .then(enrichWithCount(cacheDto, session));
+                                })
                 );
     }
 
     @Override
     public Mono<List<List<ItemDto>>> getItemChunks(String search, String sort, int pageSize, int pageNumber, WebSession session) {
-        return getAllItems(search, sort, pageSize, pageNumber)
-                .flatMap(item -> getItemDtoById(item.getId(), session))
-                .collectList()
-                .map(itemDtos -> chunkItems(itemDtos, 3));
+        // 1) пробуем взять готовую страницу каталога из кеша (как список ItemCacheDto)
+        return itemCacheService.getCatalogPage(search, sort, pageNumber, pageSize)
+                .flatMap(page -> Flux.fromIterable(page.items())
+                        .flatMap(dto -> enrichWithCount(dto, session))
+                        .collectList()
+                        .map(list -> chunkItems(list, 3))
+                )
+                // 2) если в кеше нет — собираем из БД, кладём в кеш «чистые» DTO и возвращаем с count
+                .switchIfEmpty(
+                        getAllItems(search, sort, pageSize, pageNumber)
+                                .map(this::mapToCacheDto)
+                                .collectList()
+                                .flatMap(cacheList ->
+                                        itemCacheService.putCatalogPage(search, sort, pageNumber, pageSize, cacheList)
+                                                .thenMany(Flux.fromIterable(cacheList))
+                                                .flatMap(dto -> enrichWithCount(dto, session))
+                                                .collectList()
+                                )
+                                .map(list -> chunkItems(list, 3))
+                );
     }
 }
