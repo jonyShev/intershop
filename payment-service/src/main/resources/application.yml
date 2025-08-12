@@ -4,3 +4,7 @@ server:
 spring:
   application:
     name: payment-service
+
+payment:
+  currency: RUB
+  initial-balance: 3000.00
