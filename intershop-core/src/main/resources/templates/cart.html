@@ -46,13 +46,27 @@
     </tr>
     <tr>
         <td style="text-align:right">
-                <b th:text="'Итого: '+${total}+' руб.'"></b>
+            <div th:if="${balance != null}">
+                <b th:text="'Баланс: '+${balance}+' руб.'"></b>
+            </div>
+            <div th:if="${balance == null}" style="color: darkorange;">
+                Сервис оплаты временно недоступен
+            </div>
+            <b th:text="'Итого: '+${total}+' руб.'"></b>
         </td>
     </tr>
+
     <tr>
         <td style="text-align:right">
+            <div th:if="${error == 'INSUFFICIENT_FUNDS'}" style="color: red;">
+                Недостаточно средств для покупки.
+            </div>
+            <div th:if="${error == 'PAYMENT_SERVICE_UNAVAILABLE'}" style="color: red;">
+                Сервис оплаты недоступен. Попробуйте позже.
+            </div>
+
             <form action="/buy" method="post" th:if="${!empty}">
-                <button>Купить</button>
+                <button th:disabled="${#ctx.containsVariable('canBuy') ? !canBuy : false}">Купить</button>
             </form>
         </td>
     </tr>
