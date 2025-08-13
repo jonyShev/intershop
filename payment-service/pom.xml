@@ -14,31 +14,20 @@
     <name>payment-service</name>
     <packaging>jar</packaging>
 
-    <properties>
-        <openapi.generator.version>7.5.0</openapi.generator.version>
-    </properties>
-
     <dependencies>
-        <!-- WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
-
-        <!-- Bean Validation (нужно для сгенерённых моделей) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-
-        <!-- Lombok (по желанию) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
-        <!-- Тесты -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -49,7 +38,6 @@
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>2.6.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.openapitools/jackson-databind-nullable -->
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
@@ -87,6 +75,7 @@
                                 <useJakartaEe>true</useJakartaEe>
                                 <dateLibrary>java8</dateLibrary>
                                 <useTags>true</useTags>
+                                <useBigDecimal>true</useBigDecimal>
                             </configOptions>
 
                             <generateApiTests>false</generateApiTests>
@@ -96,7 +85,6 @@
                     </execution>
                 </executions>
             </plugin>
-
             <!-- Запуск: mvn -pl payment-service spring-boot:run -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>

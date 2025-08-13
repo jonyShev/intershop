@@ -164,6 +164,7 @@
                                 <useBeanValidation>true</useBeanValidation>
                                 <useJakartaEe>true</useJakartaEe>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <useBigDecimal>true</useBigDecimal>
                             </configOptions>
 
                             <generateApiTests>false</generateApiTests>
