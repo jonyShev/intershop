@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  data:
+    redis:
+      host: localhost
+
+payment:
+  base-url: http://localhost:8081
