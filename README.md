@@ -1,38 +1,48 @@
-# Intershop - Витрина интернет-магазина (реактивная версия)
+# Intershop - Витрина интернет-магазина (v3.0, реактивная версия с сервисом платежей и кешированием в Redis)
 
 ## Описание проекта
 
-Реактивное веб-приложение на базе Spring Boot 3, использующее стек WebFlux и Spring Data R2DBC. 
-Проект представляет собой витрину интернет-магазина с возможностью добавления товаров в корзину, оформления заказов и просмотра истории покупок.
+Мультимодульный реактивный веб-проект на базе Spring Boot 3, включающий:
+
+Основное приложение "Витрина интернет-магазина" — отображение товаров, корзина, оформление заказов, история покупок.
+
+RESTful-сервис платежей — проверка баланса и списание средств, интеграция по OpenAPI.
+
+Redis — кеширование товаров (список и карточка товара).
+
+Проект реализован на реактивном стеке Spring WebFlux и Spring Data R2DBC.
 
 ## Технологии
-
 - Java 21
 - Spring Boot 3
 - Spring WebFlux
 - Spring Data R2DBC
-- R2DBC H2
-- Maven
-- Lombok + MapStruct
-- Docker
+- Spring Data Redis (reactive)
+- OpenAPI (генерация клиентского и серверного кода)
+- Maven (мультимодульная сборка)
+- Lombok, MapStruct
+- Docker, Docker Compose
+- JUnit 5, Spring Boot Test, Testcontainers
 
 ## Как собрать и запустить проект
 
 ```bash
 ./mvnw clean install
-./mvnw spring-boot:run
+./mvnw -pl shop-app spring-boot:run       # Запуск витрины (порт 8080)
+./mvnw -pl payment-service spring-boot:run # Запуск платежей (порт 8081)
 ```
 
-## Сборка JAR
+## Запуск через Docker Compose
 
 ```bash
-./mvnw clean package
-java -jar target/intershop-0.0.1-SNAPSHOT.jar
+docker-compose up --build
 ```
 
 После запуска:
-Приложение доступно по адресу:
-http://localhost:8080
+
+Витрина: http://localhost:8080
+Платежи: http://localhost:8081
+Redis: localhost:6379
 
 ## Как собрать и запустить через Docker
 ```bash
@@ -41,25 +51,25 @@ docker run -p 8080:8080 intershop
 ```
 
 ## Тестирование
-Юнит-тесты (сервисы):
+
 ```bash
 ./mvnw test
 ```
 
+## OpenAPI
+Файл спецификации: payment-service/src/main/resources/openapi/payment-api.yaml
+Генерация:
+    - Клиент для shop-app — Maven plugin openapi-generator-maven-plugin
+    - Сервер для payment-service — генерация по той же схеме
+
+
 ## Интеграционные тесты (JPA и WebMvc):
 Тоже включены в mvn test
 
-## Структура проекта
-/controller — Контроллеры
+## Кеширование в Redis
+- Список товаров и карточки кешируются в Redis
+- TTL настраивается в application.yaml
+- Если данных нет в кеше — загружаются из БД, сохраняются в Redis
 
-/service — Сервисы
-
-/repository — Репозитории
-
-/model — Модели данных
-
-/dto — DTO
-
-/resources/templates — HTML-шаблоны
-
-## v2.0 — текущая реактивная версия (Spring WebFlux + R2DBC)
+## Версия
+v3.0 — мультимодульная реактивная версия с сервисом платежей и кешированием в Redis
