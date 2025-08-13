@@ -1,9 +1,19 @@
 version: '3.8'
+
 services:
   redis:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
+    restart: unless-stopped
+
+  payment-service:
+    build:
+      context: ./payment-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     restart: unless-stopped
 
   intershop-core:
@@ -13,5 +23,7 @@ services:
       - "8080:8080"
     depends_on:
       - redis
+      - payment-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    restart: unless-stopped
