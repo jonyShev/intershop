@@ -25,3 +25,6 @@ app:
   cache:
     ttl-seconds: 180
     prefix: "catalog:"
+
+payment:
+  base-url: http://localhost:8081

@@ -21,10 +21,8 @@ public class PaymentController implements PaymentApi {
     private final AtomicReference<BigDecimal> balance;
     private final String currency;
 
-    public PaymentController(
-            @Value("${payment.initial-balance}") BigDecimal initial,
-            @Value("${payment.currency}") String currency
-    ) {
+    public PaymentController(@Value("${payment.initial-balance}") BigDecimal initial,
+                             @Value("${payment.currency}") String currency) {
         this.balance = new AtomicReference<>(initial);
         this.currency = currency;
     }

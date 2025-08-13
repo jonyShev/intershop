@@ -48,7 +48,7 @@ components:
           example: 50.00
         currency:
           type: string
-          example: EUR
+          example: RUB
     PayRequest:
       type: object
       required: [ amount, currency ]
@@ -59,7 +59,7 @@ components:
           example: 12.99
         currency:
           type: string
-          example: EUR
+          example: RUB
         orderId:
           type: integer
           format: int64

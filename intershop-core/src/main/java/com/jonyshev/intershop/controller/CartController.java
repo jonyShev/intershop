@@ -1,22 +1,19 @@
 package com.jonyshev.intershop.controller;
 
-import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
 import com.jonyshev.intershop.model.CartActionForm;
 import com.jonyshev.intershop.service.CartService;
 import com.jonyshev.intershop.service.OrderService;
+import com.jonyshev.intershop.service.PaymentServiceClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.WebSession;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -24,24 +21,35 @@ public class CartController {
 
     private final CartService cartService;
     private final OrderService orderService;
+    private final PaymentServiceClient paymentServiceClient;
 
     @GetMapping("/cart/items")
-    public Mono<String> getCartItems(WebSession session, Model model) {
-        Mono<List<ItemDto>> listMono = cartService.getCartItemsDto(session);
-        Mono<BigDecimal> totalMono = cartService.getTotalPrice(session);
-        boolean empty = cartService.isEmpty(session);
+    public Mono<String> getCartItems(WebSession session, Model model,
+                                     @RequestParam(name = "err", required = false) String err) {
+        return orderService.getItemsAndTotal(session)
+                .zipWith(
+                        paymentServiceClient.getBalance()
+                                .map(Optional::of)
+                                .onErrorReturn(Optional.empty()) // ВАЖНО: не null, а Optional.empty()
+                )
+                .map(t -> {
+                    var items      = t.getT1().getT1();
+                    var total      = t.getT1().getT2();
+                    var balanceOpt = t.getT2();
 
-        return Mono.zip(listMono, totalMono)
-                .doOnNext(tuple -> {
-                    List<ItemDto> items = tuple.getT1();
-                    BigDecimal total = tuple.getT2();
+                    BigDecimal balance = balanceOpt.orElse(null); // тут уже можно null для шаблона
+                    boolean empty  = items.isEmpty();
+                    boolean canBuy = !empty && balance != null && balance.compareTo(total) >= 0;
 
                     model.addAttribute("items", items);
                     model.addAttribute("total", total);
+                    model.addAttribute("balance", balance);
                     model.addAttribute("empty", empty);
+                    model.addAttribute("canBuy", canBuy);
+                    if (err != null) model.addAttribute("error", err); // чтобы сообщения в UI работали
 
-                })
-                .thenReturn("cart");
+                    return "cart";
+                });
     }
 
     @PostMapping("/cart/items/{id}")
@@ -57,10 +65,17 @@ public class CartController {
     public Mono<String> buy(WebSession session) {
         return orderService.getItemsAndTotal(session)
                 .flatMap(tuple -> {
-                    List<ItemDto> itemDtos = tuple.getT1();
-                    BigDecimal total = tuple.getT2();
-                    return orderService.createOrder(itemDtos, total, session);
+                    var items = tuple.getT1();
+                    var total = tuple.getT2();
+                    return paymentServiceClient.pay(total)
+                            .flatMap(ok -> {
+                                if (!ok) {
+                                    return Mono.just("redirect:/cart/items?err=INSUFFICIENT_FUNDS");
+                                }
+                                return orderService.createOrder(items, total, session)
+                                        .map(order -> "redirect:/orders/" + order.getId() + "?newOrder=true");
+                            });
                 })
-                .map(order -> "redirect:/orders/" + order.getId() + "?newOrder=true");
+                .onErrorResume(ex -> Mono.just("redirect:/cart/items?err=PAYMENT_SERVICE_UNAVAILABLE"));
     }
 }
