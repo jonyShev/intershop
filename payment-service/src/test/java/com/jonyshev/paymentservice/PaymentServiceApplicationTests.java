@@ -1,4 +1,3 @@
-/*
 package com.jonyshev.paymentservice;
 
 import org.junit.jupiter.api.Test;
@@ -12,4 +11,3 @@ public class PaymentServiceApplicationTests {
     }
 
 }
-*/
