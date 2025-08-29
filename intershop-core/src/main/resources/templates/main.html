@@ -13,6 +13,10 @@
     <a href="/cart/items" style="float:right;">
         <b>КОРЗИНА &cudarrr;</b>
     </a>
+    <form th:action="@{/logout}" method="post" style="display:inline;">
+        <th:block th:replace="csrf :: csrf"></th:block>
+        <button type="submit">Выйти</button>
+    </form>
     <table style="width:70%;margin-left:auto;margin-right:auto;">
         <tr>
             <td>
@@ -54,7 +58,7 @@
                     <tr>
                         <td>
                             <a th:href="${'/items/'+item.getId()}">
-                                <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+                                <img width="300" height="300" th:src="${'http://localhost:8080'+item.getImgPath()}">
                             </a>
                         </td>
                     </tr>
@@ -72,6 +76,7 @@
                     <tr>
                         <td>
                             <form th:action="${'/main/items/'+item.getId()}" method="post">
+                                <th:block th:replace="csrf :: csrf"></th:block>
                                 <button name="action" value="MINUS">-</button>
                                 <span th:text="${item.getCount()}"></span>
                                 <button name="action" value="PLUS">+</button>

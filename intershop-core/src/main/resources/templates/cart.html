@@ -13,13 +13,17 @@
 <a href="/main/items" style="float:right;">
     <b>ГЛАВНАЯ &cudarrr;</b>
 </a>
+<form th:action="@{/logout}" method="post" style="display:inline;">
+    <th:block th:replace="csrf :: csrf"></th:block>
+    <button type="submit">Выйти</button>
+</form>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr th:each="item : ${items}">
         <td>
             <table>
                 <tr>
                     <td>
-                        <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath}">
+                        <img width="300" height="300" th:src="${'http://localhost:8080'+item.getImgPath}">
                     </td>
                 </tr>
                 <tr>
@@ -34,6 +38,7 @@
                 <tr>
                     <td>
                         <form th:action="${'/cart/items/'+item.getId}" method="post">
+                            <th:block th:replace="csrf :: csrf"></th:block>
                             <button name="action" value="MINUS">-</button>
                             <span th:text="${item.getCount}"></span>
                             <button name="action" value="PLUS">+</button>
@@ -66,6 +71,7 @@
             </div>
 
             <form action="/buy" method="post" th:if="${!empty}">
+                <th:block th:replace="csrf :: csrf"></th:block>
                 <button th:disabled="${#ctx.containsVariable('canBuy') ? !canBuy : false}">Купить</button>
             </form>
         </td>

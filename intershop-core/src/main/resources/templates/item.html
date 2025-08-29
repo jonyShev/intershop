@@ -16,9 +16,14 @@
     <a href="/main/items" style="float:right;">
         <b>ГЛАВНАЯ &cudarrr;</b>
     </a>
+    <form th:action="@{/logout}" method="post" style="display:inline;">
+        <th:block th:replace="csrf :: csrf"></th:block>
+        <button type="submit">Выйти</button>
+    </form>
+
     <div style="width:70%;margin-left:auto;margin-right:auto;">
         <p>
-            <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+            <img width="300" height="300" th:src="${'http://localhost:8080'+item.getImgPath()}">
         </p>
         <p>
             <b th:text="${item.getTitle()}"></b>
@@ -28,6 +33,7 @@
             <span th:text="${item.getDescription()}"></span>
         </p>
         <form th:action="${'/items/'+item.getId()}" method="post">
+            <th:block th:replace="csrf :: csrf"></th:block>
             <button name="action" value="MINUS">-</button>
             <span th:text="${item.getCount()}"></span>
             <button name="action" value="PLUS">+</button>
