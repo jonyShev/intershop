@@ -1,7 +1,8 @@
-package com.jonyshev.intershop.security;
+package com.jonyshev.intershop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,22 +21,25 @@ public class SecurityConfig {
 
     @Bean
     SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        // handler для редиректа после logout
-        var logoutHandler = new RedirectServerLogoutSuccessHandler();
-        logoutHandler.setLogoutSuccessUrl(URI.create("/")); // куда редиректить
+        var logoutSuccess = new RedirectServerLogoutSuccessHandler();
+        logoutSuccess.setLogoutSuccessUrl(URI.create("/"));
 
         return http
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/", "/main/**", "/item/**", "/css/**", "/js/**", "/images/**").permitAll()
-                        .pathMatchers("/cart/**", "/orders/**", "/buy/**").authenticated()
-                        .anyExchange().permitAll()
+                        .pathMatchers(HttpMethod.GET, "/", "/main/**", "/main/items/**", "/items/**",
+                                "/actuator/**", "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/login").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/login").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/main/items/**").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/buy").authenticated()
+                        .pathMatchers(HttpMethod.POST, "/items/**").authenticated()
+                        .pathMatchers("/cart/**", "/orders/**").authenticated()
+                        .anyExchange().denyAll()
                 )
-                .formLogin(withDefaults())               // дефолтная форма /login
-                .logout(lo -> lo
-                        .logoutUrl("/logout")                // по умолчанию POST /logout
-                        .logoutSuccessHandler(logoutHandler) // вместо logoutSuccessUrl(...)
-                )
+                .anonymous(withDefaults())   // чтобы был анонимный контекст на первом рендере
+                .formLogin(withDefaults())
+                .logout(lo -> lo.logoutUrl("/logout").logoutSuccessHandler(logoutSuccess))
                 .build();
     }
 
