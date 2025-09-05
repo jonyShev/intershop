@@ -5,6 +5,8 @@ info:
 paths:
   /api/v1/balance:
     get:
+      parameters:
+        - $ref: '#/components/parameters/XUser'
       tags: [ Payment ]
       operationId: getBalance
       responses:
@@ -16,6 +18,8 @@ paths:
                 $ref: '#/components/schemas/BalanceResponse'
   /api/v1/pay:
     post:
+      parameters:
+        - $ref: '#/components/parameters/XUser'
       tags: [ Payment ]
       operationId: pay
       requestBody:
@@ -37,6 +41,12 @@ paths:
           description: Validation error
 
 components:
+  parameters:
+    XUser:
+      in: header
+      name: X-User
+      required: true
+      schema: { type: string }
   schemas:
     BalanceResponse:
       type: object
