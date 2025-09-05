@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <title>Заказ</title>
@@ -7,15 +8,31 @@
 </head>
 
 <body>
-<a href="/orders" style="float:right;">
-    <b>ЗАКАЗЫ &cudarrr;</b>
-</a>
-<a href="/cart/items" style="float:right;">
-    <b>КОРЗИНА &cudarrr;</b>
-</a>
-<a href="/main/items" style="float:right;">
-    <b>ГЛАВНАЯ &cudarrr;</b>
-</a>
+<!-- NAVBAR -->
+<div style="position:sticky;top:0;background:#f7f7f7;padding:8px 12px;border-bottom:1px solid #ddd;display:flex;gap:16px;align-items:center;justify-content:space-between">
+    <div>
+        <a href="/main/items"><b>ГЛАВНАЯ</b></a>
+    </div>
+
+    <!-- для гостя -->
+    <div sec:authorize="isAnonymous()" style="display:flex;gap:16px;align-items:center">
+        <a th:href="@{/login}"><b>Войти</b></a>
+    </div>
+
+    <!-- для авторизованного -->
+    <div sec:authorize="isAuthenticated()" style="display:flex;gap:16px;align-items:center">
+        <a href="/orders"><b>ЗАКАЗЫ</b></a>
+        <a href="/cart/items"><b>КОРЗИНА</b></a>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <th:block th:replace="csrf :: csrf"></th:block>
+            <button type="submit">Выйти</button>
+        </form>
+    </div>
+</div>
+
+<!-- Временная отладка статуса (можно убрать позже) -->
+<div sec:authorize="isAnonymous()" style="color:#888;margin:8px 12px;">[Гость]</div>
+<div sec:authorize="isAuthenticated()" style="color:#888;margin:8px 12px;">[В системе]</div>
 <h1 style="text-align:center" th:if="${newOrder}">Поздравляем! Успешная покупка! &#128578;</h1>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr>
@@ -29,7 +46,7 @@
                 <tr>
                     <td>
                         <a th:href="${'/items/'+orderItem.itemId}">
-                            <img width="300" height="300" th:src="${'http://localhost:8080/'+orderItem.imgPath}">
+                            <img width="300" height="300" th:src="${'http://localhost:8080'+orderItem.imgPath}">
                         </a>
                     </td>
                 </tr>

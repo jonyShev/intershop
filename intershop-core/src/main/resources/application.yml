@@ -1,11 +1,37 @@
 spring:
   r2dbc:
-    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
     password:
+
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: ADMIN
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8083/realms/intershop}
+        registration:
+          payments:
+            provider: keycloak
+            client-id: ${PAYMENTS_CLIENT_ID:intershop-client}
+            client-secret: ${PAYMENTS_CLIENT_SECRET:dev-secret}
+            authorization-grant-type: client_credentials
+            scope: payments
+
   sql:
     init:
-      mode: always
+      mode: never   # чтобы не конфликтовать с Flyway
+
+  flyway:
+    enabled: true
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    user: sa
+    password:
+    locations: classpath:db/migration/h2
 
   thymeleaf:
     prefix: classpath:/templates/
@@ -28,3 +54,7 @@ app:
 
 payment:
   base-url: http://localhost:8081
+
+logging:
+  level:
+    org.springframework.security: DEBUG

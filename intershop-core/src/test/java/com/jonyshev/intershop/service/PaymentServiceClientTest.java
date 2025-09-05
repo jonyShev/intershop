@@ -11,18 +11,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceClientTest {
@@ -35,78 +36,72 @@ class PaymentServiceClientTest {
 
     PaymentServiceClient client;
 
+    private static final String USER = "alice";
+
     @BeforeEach
     void setUp() {
-        client = new PaymentServiceClient(paymentApi, "EUR");
+        client = new PaymentServiceClient(paymentApi);
+        // проставляем валюту, т.к. поле приватное и берётся из @Value
+        ReflectionTestUtils.setField(client, "currency", "EUR");
     }
 
     @Test
-    void getBalance_shouldMapAmountToBigDecimal() {
+    void getBalance_shouldPassUser_andReturnBalanceResponse() {
         // given
         var balance = new BalanceResponse().amount(123.45);
-        when(paymentApi.getBalance()).thenReturn(Mono.just(balance));
+        when(paymentApi.getBalance(eq(USER))).thenReturn(Mono.just(balance));
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(USER, "n/a");
 
         // when & then
-        StepVerifier.create(client.getBalance())
-                .expectNext(new BigDecimal("123.45"))
+        StepVerifier.create(
+                        client.getBalance()
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
+                )
+                .expectNext(balance)
                 .verifyComplete();
 
-        verify(paymentApi).getBalance();
+        verify(paymentApi).getBalance(USER);
     }
 
     @Test
-    void pay_whenSuccess_shouldReturnTrue_andSendCorrectBody() {
+    void pay_whenSuccess_shouldReturnPayResponse_andSendCorrectBody_withUser() {
         // given
-        when(paymentApi.pay(any()))
-                .thenReturn(Mono.just(new PayResponse().success(true)));
-
-        // when
         var amount = new BigDecimal("99.99");
+        var apiResponse = new PayResponse().success(true);
+        when(paymentApi.pay(eq(USER), any(PayRequest.class))).thenReturn(Mono.just(apiResponse));
 
-        // then
-        StepVerifier.create(client.pay(amount))
-                .expectNext(true)
+        Authentication auth = new UsernamePasswordAuthenticationToken(USER, "n/a");
+
+        // when & then
+        StepVerifier.create(
+                        client.pay(amount)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
+                )
+                .expectNext(apiResponse)
                 .verifyComplete();
 
-        verify(paymentApi).pay(payRequestCaptor.capture());
+        verify(paymentApi).pay(eq(USER), payRequestCaptor.capture());
         PayRequest sent = payRequestCaptor.getValue();
         assertThat(sent.getAmount()).isEqualTo(99.99);
         assertThat(sent.getCurrency()).isEqualTo("EUR");
     }
 
     @Test
-    void pay_whenPaymentRequired402_shouldReturnFalse() {
+    void pay_whenApiErrors_shouldPropagateError() {
         // given
-        var ex = WebClientResponseException.create(
-                HttpStatus.PAYMENT_REQUIRED.value(),
-                "Payment Required",
-                HttpHeaders.EMPTY,
-                new byte[0],
-                Charset.defaultCharset()
-        );
-        when(paymentApi.pay(any())).thenReturn(Mono.error(ex));
+        var amount = new BigDecimal("10.00");
+        var boom = new RuntimeException("Boom");
+        when(paymentApi.pay(eq(USER), any(PayRequest.class))).thenReturn(Mono.error(boom));
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(USER, "n/a");
 
         // when & then
-        StepVerifier.create(client.pay(new BigDecimal("10.00")))
-                .expectNext(false)
-                .verifyComplete();
-    }
-
-    @Test
-    void pay_whenOtherError_shouldPropagateError() {
-        // given
-        var ex = WebClientResponseException.create(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Boom",
-                HttpHeaders.EMPTY,
-                new byte[0],
-                Charset.defaultCharset()
-        );
-        when(paymentApi.pay(any())).thenReturn(Mono.error(ex));
-
-        // when & then
-        StepVerifier.create(client.pay(new BigDecimal("10.00")))
-                .expectError(WebClientResponseException.class)
+        StepVerifier.create(
+                        client.pay(amount)
+                                .contextWrite(ReactiveSecurityContextHolder.withAuthentication(auth))
+                )
+                .expectErrorMatches(err -> err == boom)
                 .verify();
     }
 }

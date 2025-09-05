@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <title>Корзина товаров</title>
@@ -7,19 +8,38 @@
 </head>
 
 <body>
-<a href="/orders" style="float:right;">
-    <b>ЗАКАЗЫ &cudarrr;</b>
-</a>
-<a href="/main/items" style="float:right;">
-    <b>ГЛАВНАЯ &cudarrr;</b>
-</a>
+<!-- NAVBAR -->
+<div style="position:sticky;top:0;background:#f7f7f7;padding:8px 12px;border-bottom:1px solid #ddd;display:flex;gap:16px;align-items:center;justify-content:space-between">
+    <div>
+        <a href="/main/items"><b>ГЛАВНАЯ</b></a>
+    </div>
+
+    <!-- для гостя -->
+    <div sec:authorize="isAnonymous()" style="display:flex;gap:16px;align-items:center">
+        <a th:href="@{/login}"><b>Войти</b></a>
+    </div>
+
+    <!-- для авторизованного -->
+    <div sec:authorize="isAuthenticated()" style="display:flex;gap:16px;align-items:center">
+        <a href="/orders"><b>ЗАКАЗЫ</b></a>
+        <a href="/cart/items"><b>КОРЗИНА</b></a>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <th:block th:replace="csrf :: csrf"></th:block>
+            <button type="submit">Выйти</button>
+        </form>
+    </div>
+</div>
+
+<!-- Временная отладка статуса (можно убрать позже) -->
+<div sec:authorize="isAnonymous()" style="color:#888;margin:8px 12px;">[Гость]</div>
+<div sec:authorize="isAuthenticated()" style="color:#888;margin:8px 12px;">[В системе]</div>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
     <tr th:each="item : ${items}">
         <td>
             <table>
                 <tr>
                     <td>
-                        <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath}">
+                        <img width="300" height="300" th:src="${'http://localhost:8080'+item.getImgPath}">
                     </td>
                 </tr>
                 <tr>
@@ -30,15 +50,22 @@
                         <b th:text="${item.getPrice}+' руб.'"></b>
                     </td>
                 </tr>
-                <tr><td th:text="${item.getDescription}"></td></tr>
+                <tr>
+                    <td th:text="${item.getDescription}"></td>
+                </tr>
                 <tr>
                     <td>
-                        <form th:action="${'/cart/items/'+item.getId}" method="post">
+                        <form th:action="${'/cart/items/'+item.getId()}" method="post"
+                              sec:authorize="isAuthenticated()">
+                            <th:block th:replace="csrf :: csrf"></th:block>
                             <button name="action" value="MINUS">-</button>
-                            <span th:text="${item.getCount}"></span>
+                            <span th:text="${item.getCount()}"></span>
                             <button name="action" value="PLUS">+</button>
                             <button name="action" value="DELETE" style="float:right;">&cross;</button>
                         </form>
+                        <div sec:authorize="isAnonymous()">
+                            <a th:href="@{/login}">Войдите, чтобы оформить покупку</a>
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -65,7 +92,8 @@
                 Сервис оплаты недоступен. Попробуйте позже.
             </div>
 
-            <form action="/buy" method="post" th:if="${!empty}">
+            <form action="/buy" method="post" th:if="${!empty}" sec:authorize="isAuthenticated()">
+                <th:block th:replace="csrf :: csrf"></th:block>
                 <button th:disabled="${#ctx.containsVariable('canBuy') ? !canBuy : false}">Купить</button>
             </form>
         </td>

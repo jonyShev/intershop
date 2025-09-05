@@ -1,0 +1,20 @@
+{
+  "realm": "intershop",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "intershop-client",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dev-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "defaultClientScopes": ["roles", "profile", "email", "web-origins"],
+      "optionalClientScopes": ["payments"]
+    }
+  ],
+  "clientScopes": [
+    { "name": "payments", "protocol": "openid-connect" }
+  ]
+}

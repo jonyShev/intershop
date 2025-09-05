@@ -18,8 +18,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class CartServiceImpl implements CartService {
-
-    private final static String CART_KEY = "CART";
+    private static final String CART_PREFIX = "CART:";
+    private static final String PRINCIPAL_ATTR = "PRINCIPAL";
     private final ItemRepository itemRepository;
 
     @Override
@@ -82,7 +82,8 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Mono<Void> clear(WebSession session) {
-        getCart(session).clear();
+        String key = cartKey(session);
+        session.getAttributes().remove(key);
         return Mono.empty();
     }
 
@@ -118,6 +119,14 @@ public class CartServiceImpl implements CartService {
 
     @SuppressWarnings("unchecked")
     private Map<Long, Integer> getCart(WebSession session) {
-        return (Map<Long, Integer>) session.getAttributes().computeIfAbsent(CART_KEY, key -> new HashMap<Long, Integer>());
+        String key = cartKey(session);
+        return (Map<Long, Integer>) session.getAttributes()
+                .computeIfAbsent(key, k -> new HashMap<Long, Integer>());
+    }
+
+    private String cartKey(WebSession session) {
+        Object principal = session.getAttributes().get(PRINCIPAL_ATTR);
+        String username = (principal instanceof String s) ? s : "anonymousUser";
+        return CART_PREFIX + username;
     }
 }

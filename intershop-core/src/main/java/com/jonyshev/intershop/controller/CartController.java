@@ -29,8 +29,9 @@ public class CartController {
         return orderService.getItemsAndTotal(session)
                 .zipWith(
                         paymentServiceClient.getBalance()
+                                .map(r -> BigDecimal.valueOf(r.getAmount())) // <-- достаём сумму
                                 .map(Optional::of)
-                                .onErrorReturn(Optional.empty()) // ВАЖНО: не null, а Optional.empty()
+                                .onErrorReturn(Optional.empty())
                 )
                 .map(t -> {
                     var items      = t.getT1().getT1();
@@ -68,8 +69,9 @@ public class CartController {
                     var items = tuple.getT1();
                     var total = tuple.getT2();
                     return paymentServiceClient.pay(total)
-                            .flatMap(ok -> {
-                                if (!ok) {
+                            .map(resp -> resp.getSuccess() != null && resp.getSuccess()) // превращаем в boolean
+                            .flatMap(success -> {
+                                if (!success) {
                                     return Mono.just("redirect:/cart/items?err=INSUFFICIENT_FUNDS");
                                 }
                                 return orderService.createOrder(items, total, session)

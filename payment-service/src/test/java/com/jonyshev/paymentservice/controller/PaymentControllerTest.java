@@ -22,7 +22,7 @@ class PaymentControllerTest {
         PayRequest req = new PayRequest().amount(100.0);
 
         ResponseEntity<PayResponse> resp = controller
-                .pay(Mono.just(req), mock(ServerWebExchange.class))
+                .pay("user-1", Mono.just(req), mock(ServerWebExchange.class))
                 .block();
 
         assertNotNull(resp);
@@ -34,14 +34,14 @@ class PaymentControllerTest {
     @Test
     void pay_fail_whenNotEnoughBalance() {
         controller = new PaymentController(new BigDecimal("50.00"), "RUB");
-
         PayRequest req = new PayRequest().amount(100.0);
 
         ResponseEntity<PayResponse> resp = controller
-                .pay(Mono.just(req), mock(ServerWebExchange.class))
+                .pay("user-2", Mono.just(req), mock(ServerWebExchange.class))
                 .block();
 
         assertNotNull(resp);
         assertEquals(402, resp.getStatusCode().value());
     }
+
 }
