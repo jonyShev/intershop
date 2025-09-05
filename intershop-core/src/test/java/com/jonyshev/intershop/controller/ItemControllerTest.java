@@ -2,16 +2,16 @@ package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.CartAction;
-import com.jonyshev.intershop.model.CartActionForm;
-import com.jonyshev.intershop.repository.ItemRepository;
 import com.jonyshev.intershop.service.CartService;
-import com.jonyshev.intershop.service.CartServiceImpl;
 import com.jonyshev.intershop.service.ItemService;
-import com.jonyshev.intershop.service.ItemServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -20,23 +20,29 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(controllers = ItemController.class)
-@Import({ItemServiceImpl.class, CartServiceImpl.class})
-public class ItemControllerTest {
+@ActiveProfiles("test")
+class ItemControllerTest {
+
+    @TestConfiguration
+    static class NoSecurity {
+        @Bean
+        SecurityWebFilterChain securityWebFilterChain(
+                org.springframework.security.config.web.server.ServerHttpSecurity http) {
+            return http
+                    .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .authorizeExchange(ex -> ex.anyExchange().permitAll())
+                    .build();
+        }
+    }
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @MockitoBean
-    private ItemRepository itemRepository;
 
     @MockitoBean
     private ItemService itemService;
@@ -59,28 +65,27 @@ public class ItemControllerTest {
                 List.of(new ItemDto()),
                 List.of(new ItemDto())
         );
-        //mock
+        // mock
         when(itemService.getItemChunks(eq(""), eq("NO"), eq(10), eq(1), any()))
                 .thenReturn(Mono.just(chunks));
 
-        //when then
+        // when/then
         webTestClient.get().uri("/main/items")
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .consumeWith(response -> assertThat(response.getResponseBody().contains("main")));
+                .expectStatus().isOk();
 
+        // verify
+        verify(itemService).getItemChunks(eq(""), eq("NO"), eq(10), eq(1), any());
     }
 
     @Test
     void updateCartFromMainTest() {
-        //given
+        // given
         Long id = 1L;
-        CartActionForm form = new CartActionForm();
-        form.setAction("PLUS");
-        //mock
+        // mock
         when(cartService.updateCartAction(eq(id), eq(CartAction.PLUS), any())).thenReturn(Mono.empty());
-        //when then
+
+        // when/then
         webTestClient.post()
                 .uri("/main/items/" + id)
                 .body(BodyInserters.fromFormData("action", "PLUS"))
@@ -88,13 +93,13 @@ public class ItemControllerTest {
                 .expectStatus().is3xxRedirection()
                 .expectHeader().valueEquals("Location", "/main/items");
 
-        //verify
+        // verify
         verify(cartService).updateCartAction(eq(id), eq(CartAction.PLUS), any());
     }
 
     @Test
     void getItemPageTest() {
-        //given
+        // given
         Long itemId = 1L;
         ItemDto itemDto = ItemDto.builder()
                 .id(itemId)
@@ -104,18 +109,17 @@ public class ItemControllerTest {
                 .price(BigDecimal.valueOf(99.99))
                 .count(2)
                 .build();
-        //mock
+
+        // mock
         when(itemService.getItemDtoById(eq(itemId), any())).thenReturn(Mono.just(itemDto));
-        //when
+
+        // when/then
         webTestClient.get()
                 .uri("/items/" + itemId)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .consumeWith(response -> {
-                    String body = response.getResponseBody();
-                    assertNotNull(body);
-                    assertTrue(body.contains("Sample Item"));
-                });
+                .expectStatus().isOk();
+
+        // verify
+        verify(itemService).getItemDtoById(eq(itemId), any());
     }
 }

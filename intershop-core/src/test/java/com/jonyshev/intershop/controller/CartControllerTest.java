@@ -2,6 +2,7 @@ package com.jonyshev.intershop.controller;
 
 import com.jonyshev.intershop.dto.ItemDto;
 import com.jonyshev.intershop.model.Order;
+import com.jonyshev.intershop.paymentservice.model.PayResponse;
 import com.jonyshev.intershop.service.CartService;
 import com.jonyshev.intershop.service.OrderService;
 import com.jonyshev.intershop.service.PaymentServiceClient;
@@ -9,6 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -21,9 +27,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-
 @WebFluxTest(controllers = CartController.class)
+@ActiveProfiles("test")
 class CartControllerTest {
+
+    @TestConfiguration
+    static class NoSecurity {
+        @Bean
+        SecurityWebFilterChain securityWebFilterChain(
+                org.springframework.security.config.web.server.ServerHttpSecurity http) {
+            return http
+                    .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .authorizeExchange(ex -> ex.anyExchange().permitAll())
+                    .build();
+        }
+    }
 
     @Autowired
     private WebTestClient webTestClient;
@@ -43,13 +61,16 @@ class CartControllerTest {
         var items = List.<ItemDto>of();
         var total = BigDecimal.valueOf(1999, 2); // 19.99
 
-        when(orderService.getItemsAndTotal(any())).thenReturn(Mono.just(Tuples.of(items, total)));
+        when(orderService.getItemsAndTotal(any()))
+                .thenReturn(Mono.just(Tuples.of(items, total)));
 
-        when(paymentServiceClient.pay(total)).thenReturn(Mono.just(true));
+        var ok = new PayResponse().success(true);
+        when(paymentServiceClient.pay(total)).thenReturn(Mono.just(ok));
 
         Order order = Mockito.mock(Order.class);
         when(order.getId()).thenReturn(42L);
-        when(orderService.createOrder(eq(items), eq(total), any())).thenReturn(Mono.just(order));
+        when(orderService.createOrder(eq(items), eq(total), any()))
+                .thenReturn(Mono.just(order));
 
         // when / then
         webTestClient.post()
@@ -65,9 +86,11 @@ class CartControllerTest {
         var items = List.<ItemDto>of();
         var total = BigDecimal.TEN;
 
-        when(orderService.getItemsAndTotal(any())).thenReturn(Mono.just(Tuples.of(items, total)));
+        when(orderService.getItemsAndTotal(any()))
+                .thenReturn(Mono.just(Tuples.of(items, total)));
 
-        when(paymentServiceClient.pay(total)).thenReturn(Mono.just(false));
+        var fail = new PayResponse().success(false);
+        when(paymentServiceClient.pay(total)).thenReturn(Mono.just(fail));
 
         // when / then
         webTestClient.post()
@@ -83,9 +106,11 @@ class CartControllerTest {
         var items = List.<ItemDto>of();
         var total = BigDecimal.valueOf(5000, 2);
 
-        when(orderService.getItemsAndTotal(any())).thenReturn(Mono.just(Tuples.of(items, total)));
+        when(orderService.getItemsAndTotal(any()))
+                .thenReturn(Mono.just(Tuples.of(items, total)));
 
-        when(paymentServiceClient.pay(total)).thenReturn(Mono.error(new RuntimeException("Payment service down")));
+        when(paymentServiceClient.pay(total))
+                .thenReturn(Mono.error(new RuntimeException("Payment service down")));
 
         // when / then
         webTestClient.post()

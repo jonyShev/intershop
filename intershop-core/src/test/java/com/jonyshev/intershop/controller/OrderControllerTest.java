@@ -8,7 +8,12 @@ import com.jonyshev.intershop.service.OrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -21,7 +26,20 @@ import static org.mockito.Mockito.when;
 
 @WebFluxTest(OrderController.class)
 @Import(OrderController.class)
+@ActiveProfiles("test")
 class OrderControllerTest {
+    @TestConfiguration
+    static class NoSecurity {
+        @Bean
+        SecurityWebFilterChain securityWebFilterChain(
+                org.springframework.security.config.web.server.ServerHttpSecurity http) {
+            return http
+                    .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                    .authorizeExchange(ex -> ex.anyExchange().permitAll())
+                    .build();
+        }
+    }
+
 
     @Autowired
     private WebTestClient webTestClient;
