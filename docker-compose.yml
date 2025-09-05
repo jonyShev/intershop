@@ -1,6 +1,19 @@
-version: '3.8'
+version: "3.9"
 
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    command: [ "start-dev", "--http-port=8083", "--import-realm" ]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8083:8083"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    restart: unless-stopped
+
   redis:
     image: redis:7.2-alpine
     ports:
@@ -13,7 +26,11 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      # issuer виден ВНУТРИ сети docker по имени сервиса keycloak
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+    depends_on:
+      - keycloak
     restart: unless-stopped
 
   intershop-core:
@@ -21,9 +38,17 @@ services:
       context: ./intershop-core
     ports:
       - "8080:8080"
-    depends_on:
-      - redis
-      - payment-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      PAYMENTS_CLIENT_ID: ${PAYMENTS_CLIENT_ID}
+      PAYMENTS_CLIENT_SECRET: ${PAYMENTS_CLIENT_SECRET}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+      PAYMENT_BASE_URL: ${PAYMENT_BASE_URL}
+    depends_on:
+      - keycloak
+      - payment-service
+      - redis
     restart: unless-stopped
+
+volumes:
+  keycloak_data:

@@ -9,6 +9,18 @@ spring:
       name: admin
       password: admin
       roles: ADMIN
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8083/realms/intershop}
+        registration:
+          payments:
+            provider: keycloak
+            client-id: ${PAYMENTS_CLIENT_ID:intershop-client}
+            client-secret: ${PAYMENTS_CLIENT_SECRET:dev-secret}
+            authorization-grant-type: client_credentials
+            scope: payments
 
   sql:
     init:
@@ -42,3 +54,7 @@ app:
 
 payment:
   base-url: http://localhost:8081
+
+logging:
+  level:
+    org.springframework.security: DEBUG

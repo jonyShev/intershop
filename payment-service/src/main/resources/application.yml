@@ -5,6 +5,16 @@ spring:
   application:
     name: payment-service
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8083/realms/intershop}
+
 payment:
   currency: RUB
   initial-balance: 3000.00
+
+logging:
+  level:
+    org.springframework.security: DEBUG
