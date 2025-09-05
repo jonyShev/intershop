@@ -12,12 +12,11 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
+@Builder
 public class AppUser {
     @Id
     private UUID id;
     private String username;
     private String password;
     private boolean enabled = true;
-
-    // getters/setters/constructors
 }
