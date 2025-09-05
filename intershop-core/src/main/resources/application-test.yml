@@ -1,0 +1,11 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+
+oauth2.enabled: false
+intershop.payment.client.enabled: false
+
+logging:
+  level:
+    org.springframework.security: WARN

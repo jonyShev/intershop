@@ -1,0 +1,19 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: payment-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://dummy-issuer
+
+payment:
+  currency: RUB
+  initial-balance: 3000.00
+
+logging:
+  level:
+    org.springframework.security: WARN
